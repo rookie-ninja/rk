@@ -1,7 +1,6 @@
 package rk_install
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/fatih/color"
@@ -9,25 +8,44 @@ import (
 	rk_common "github.com/rookie-ninja/rk-cmd/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"strings"
 )
 
-//go get github.com/golang/protobuf/protoc-gen-go
+const (
+	ProtocGenGoOwner = "golang"
+	ProtocGenGoRepo  = "protobuf"
+	ProtocGenGoUrlBase = "github.com/golang/protobuf/protoc-gen-go"
+)
 
-// Install golang on target hosts
+type installProtocGenGoInfo struct {
+	ListReleases bool
+	Release string
+}
+
+var InstallProtocGenGoInfo = installProtocGenGoInfo{
+	ListReleases: false,
+	Release: "",
+}
+
+// Install protoc-gen-go on target hosts
 func InstallProtocGenGoCommand() *cli.Command{
 	command := &cli.Command{
 		Name: "protoc-gen-go",
-		Usage: "protoc-gen-go",
-		UsageText: "rk install protoc-gen-go",
-		Subcommands: []*cli.Command{
-			listProtocGenGoReleasesCommand(),
-		},
+		Usage: "install protoc-gen-go on local machine",
+		UsageText: "rk install protoc-gen-go -r [release]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name: "version",
-				Aliases: []string{"v"},
-				Value: "",
-				Usage: "install with version",
+				Name:        "release, r",
+				Aliases:     []string{"r"},
+				Destination: &InstallProtocGenGoInfo.Release,
+				Required: false,
+				Usage:       "protoc-gen-go release",
+			},
+			&cli.BoolFlag{
+				Name:        "list, l",
+				Aliases:     []string{"l"},
+				Destination: &InstallProtocGenGoInfo.ListReleases,
+				Usage:       "list protoc-gen-go releases, list most recent 10 releases",
 			},
 		},
 		Action: InstallProtocGenGoAction,
@@ -36,71 +54,70 @@ func InstallProtocGenGoCommand() *cli.Command{
 	return command
 }
 
-func listProtocGenGoReleasesCommand() *cli.Command {
-	command := &cli.Command{
-		Name: "list",
-		Usage: "list",
-		UsageText: "rk install protoc-gen-go list",
-		Action: listProtocGenGoReleasesAction,
-	}
-
-	return command
-}
-
-func listProtocGenGoReleasesAction(ctx *cli.Context) error {
+func listProtocGenGoReleases() error {
 	opt := &github.ListOptions{
 		PerPage: 10,
 	}
 
-	res, _, err := rk_common.GithubClient.Repositories.ListReleases(context.Background(),
-		"golang", "protobuf", opt)
+	res, _, err := rk_common.GithubClient.Repositories.ListReleases(context.Background(), ProtocGenGoOwner, ProtocGenGoRepo, opt)
 	if err != nil {
+		color.Red("failed to list protoc-gen-go release from github\n[err] %v", err)
 		return err
 	}
 
-	buf := &bytes.Buffer{}
 	for i := range res {
-		buf.WriteString(res[i].GetTagName() + "\n")
+		color.Cyan("%s", res[i].GetTagName())
 	}
 
-	color.Yellow(buf.String())
+	if len(res) < 1 {
+		color.Cyan("no release found, please use default release")
+	}
 
 	return nil
 }
 
 func InstallProtocGenGoAction(ctx *cli.Context) error {
-	var version = ""
-
-	if version = ctx.String("version"); len(version) < 1 {
-		color.Yellow("Install latest protoc-gen-go")
-		version = "latest"
+	if InstallProtocGenGoInfo.ListReleases {
+		return listProtocGenGoReleases()
 	}
 
 	// install pkg
-	color.Cyan("1: Install package")
-	err := installProtocGenGo(version)
+	color.Cyan("Install protoc-gen-go %s", InstallProtocGenGoInfo.Release)
+	err := installProtocGenGo()
 	if err != nil {
-		color.Red("err: %v", err)
 		return err
 	}
-	color.Green("Done")
+	color.Green("[Success]")
 
-	return nil
+	color.Cyan("Validate installation")
+	return validateProtocGenGoInstallation()
 }
 
-func installProtocGenGo(version string) error {
-	url := "github.com/golang/protobuf/protoc-gen-go"
+func installProtocGenGo() error {
+	url := fmt.Sprintf(ProtocGenGoUrlBase)
 
-	if version != "latest" {
-		url = fmt.Sprintf("github.com/golang/protobuf/protoc-gen-go@%s", version)
+	if len(InstallProtocGenGoInfo.Release) > 1 {
+		url += fmt.Sprintf("@%s", InstallProtocGenGoInfo.Release)
 	}
 
 	bytes, err := exec.Command("go", "get", url).CombinedOutput()
 	if err != nil {
+		color.Red("failed to install protoc-gen-go\n[err] %v", err)
+		color.Red("[stderr] %s", string(bytes))
 		return err
 	}
 
-	println(string(bytes))
+	return nil
+}
 
+func validateProtocGenGoInstallation() error {
+	bytes, err := exec.Command("which", "protoc-gen-go").CombinedOutput()
+	if err != nil {
+		color.Red("failed to validate protoc-gen-go\n[err] %v", err)
+		color.Red("[stderr] %s", string(bytes))
+		return err
+	}
+
+	color.Green("[%s]", strings.TrimRight(string(bytes), "\n"))
 	return nil
 }

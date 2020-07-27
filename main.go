@@ -11,7 +11,8 @@ func main() {
 	app := &cli.App{
 		Name: "rk",
 		Usage: "rk utility command line tools",
-		Description: "rk is ad command line interface for utility tools during rk style software development lifecycle",
+		Version: "1.0.0",
+		Description: "rk is command line interface for utility tools during rk style software development lifecycle",
 		Commands: []*cli.Command {
 			rk_install.Install(),
 		},
