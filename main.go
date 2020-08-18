@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/rookie-ninja/rk-cmd/commands/install"
+	"github.com/rookie-ninja/rk/commands/gen"
+	"github.com/rookie-ninja/rk/commands/install"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
@@ -15,6 +16,7 @@ func main() {
 		Description: "rk is command line interface for utility tools during rk style software development lifecycle",
 		Commands: []*cli.Command {
 			rk_install.Install(),
+			rk_gen.Gen(),
 		},
 	}
 

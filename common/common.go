@@ -12,7 +12,6 @@ var (
     RkHomeDir = "./"
 )
 
-
 func init() {
 	userHomeDir, _ := os.UserHomeDir()
 	RkHomeDir = path.Join(userHomeDir, ".rk")

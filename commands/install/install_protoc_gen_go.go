@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/google/go-github/v32/github"
-	rk_common "github.com/rookie-ninja/rk-cmd/common"
+	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
 	"strings"

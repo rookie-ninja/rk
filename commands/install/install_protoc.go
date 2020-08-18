@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/google/go-github/v32/github"
-	"github.com/rookie-ninja/rk-cmd/common"
+	"github.com/rookie-ninja/rk/common"
 	"github.com/schollz/progressbar/v3"
 	"github.com/urfave/cli/v2"
 	"io"
