@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/rookie-ninja/rk/commands/gen"
 	"github.com/rookie-ninja/rk/commands/install"
+	rk_test "github.com/rookie-ninja/rk/commands/test"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
@@ -17,6 +18,7 @@ func main() {
 		Commands: []*cli.Command{
 			rk_install.Install(),
 			rk_gen.Gen(),
+			rk_test.Test(),
 		},
 	}
 
