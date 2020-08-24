@@ -16,6 +16,7 @@ rk lets you:
     - [rk help](#rk-help)
     - [rk install](#rk-install)
     - [rk gen](#rk-gen)
+    - [rk test](#rk-test)
   - [Development Status: Stable](#development-status-stable)
   - [Contributing](#contributing)
 
@@ -31,9 +32,10 @@ We'll start with a general overview of the commands.
 There are more commands, and we will get into] usage below, but this shows the basic functionality.
 
 ```shell script
-rk help
-rk install # Install third party command line tools
-rk gen # Generate files from proto
+   install  Install third-party software
+   gen      Generate files
+   test     Run unit test
+   help, h  Shows a list of commands or help for one command
 ```
 
 ## Command Overview
@@ -76,6 +78,18 @@ COMMANDS:
    pb-go    generate go & doc file from proto
    pb-doc   generate documentation from proto
    test     Run unit test
+   help, h  Shows a list of commands or help for one command
+```
+
+### rk test
+```shell script
+rk test # Generate files from proto
+```
+
+Subcommands
+```shell script
+COMMANDS:
+   ut-go    run unit test in golang
    help, h  Shows a list of commands or help for one command
 ```
 
