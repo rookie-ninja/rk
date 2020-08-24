@@ -75,6 +75,7 @@ Subcommands
 COMMANDS:
    pb-go    generate go & doc file from proto
    pb-doc   generate documentation from proto
+   test     Run unit test
    help, h  Shows a list of commands or help for one command
 ```
 
