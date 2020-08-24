@@ -9,7 +9,7 @@ import (
 
 var (
 	GithubClient = github.NewClient(nil)
-    RkHomeDir = "./"
+	RkHomeDir    = "./"
 )
 
 func init() {

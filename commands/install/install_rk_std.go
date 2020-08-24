@@ -8,12 +8,12 @@ import (
 const EOE = "------------------------------------------------------------------"
 
 // Install rk-std on target hosts
-func InstallRkStdCommand() *cli.Command{
+func InstallRkStdCommand() *cli.Command {
 	command := &cli.Command{
-		Name: "rk-std",
-		Usage: "install rk standard environment on local machine",
+		Name:      "rk-std",
+		Usage:     "install rk standard environment on local machine",
 		UsageText: "rk install rk-std -r [release]",
-		Action: InstallRkStdAction,
+		Action:    InstallRkStdAction,
 	}
 
 	return command
@@ -74,6 +74,13 @@ func InstallRkStdAction(ctx *cli.Context) error {
 
 	color.Magenta("[8] Install gocov")
 	if err := InstallGoCovAction(ctx); err != nil {
+		return err
+	}
+	color.Magenta("[Success]")
+	color.White(EOE)
+
+	color.Magenta("[9] Install protoc-gen-doc")
+	if err := InstallProtocGenDocAction(ctx); err != nil {
 		return err
 	}
 	color.Magenta("[Success]")

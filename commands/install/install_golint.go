@@ -12,33 +12,33 @@ import (
 )
 
 const (
-	GoLintOwner = "golang"
-	GoLintRepo  = "lint"
+	GoLintOwner   = "golang"
+	GoLintRepo    = "lint"
 	GoLintUrlBase = "golang.org/x/lint/golint"
 )
 
 type installGoLintInfo struct {
 	ListReleases bool
-	Release string
+	Release      string
 }
 
 var InstallGoLintInfo = installGoLintInfo{
 	ListReleases: false,
-	Release: "",
+	Release:      "",
 }
 
 // Install protoc-gen-swagger on target hosts
-func InstallGoLintCommand() *cli.Command{
+func InstallGoLintCommand() *cli.Command {
 	command := &cli.Command{
-		Name: "golint",
-		Usage: "install golint on local machine",
+		Name:      "golint",
+		Usage:     "install golint on local machine",
 		UsageText: "rk install golint -r [release]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "release, r",
 				Aliases:     []string{"r"},
 				Destination: &InstallGoLintInfo.Release,
-				Required: false,
+				Required:    false,
 				Usage:       "golint release",
 			},
 			&cli.BoolFlag{

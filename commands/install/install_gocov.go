@@ -12,33 +12,33 @@ import (
 )
 
 const (
-	GoCovOwner = "axw"
-	GoCovRepo  = "gocov"
+	GoCovOwner   = "axw"
+	GoCovRepo    = "gocov"
 	GoCovUrlBase = "github.com/axw/gocov/gocov"
 )
 
 type installGoCovInfo struct {
 	ListReleases bool
-	Release string
+	Release      string
 }
 
 var InstallGoCovInfo = installGoCovInfo{
 	ListReleases: false,
-	Release: "",
+	Release:      "",
 }
 
 // Install gocov on target hosts
-func InstallGoCovCommand() *cli.Command{
+func InstallGoCovCommand() *cli.Command {
 	command := &cli.Command{
-		Name: "gocov",
-		Usage: "install gocov on local machine",
+		Name:      "gocov",
+		Usage:     "install gocov on local machine",
 		UsageText: "rk install gocov -r [release]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "release, r",
 				Aliases:     []string{"r"},
 				Destination: &InstallGoCovInfo.Release,
-				Required: false,
+				Required:    false,
 				Usage:       "gocov release",
 			},
 			&cli.BoolFlag{

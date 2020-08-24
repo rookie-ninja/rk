@@ -12,33 +12,33 @@ import (
 )
 
 const (
-	ProtocGenGoOwner = "golang"
-	ProtocGenGoRepo  = "protobuf"
+	ProtocGenGoOwner   = "golang"
+	ProtocGenGoRepo    = "protobuf"
 	ProtocGenGoUrlBase = "github.com/golang/protobuf/protoc-gen-go"
 )
 
 type installProtocGenGoInfo struct {
 	ListReleases bool
-	Release string
+	Release      string
 }
 
 var InstallProtocGenGoInfo = installProtocGenGoInfo{
 	ListReleases: false,
-	Release: "",
+	Release:      "",
 }
 
 // Install protoc-gen-go on target hosts
-func InstallProtocGenGoCommand() *cli.Command{
+func InstallProtocGenGoCommand() *cli.Command {
 	command := &cli.Command{
-		Name: "protoc-gen-go",
-		Usage: "install protoc-gen-go on local machine",
+		Name:      "protoc-gen-go",
+		Usage:     "install protoc-gen-go on local machine",
 		UsageText: "rk install protoc-gen-go -r [release]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "release, r",
 				Aliases:     []string{"r"},
 				Destination: &InstallProtocGenGoInfo.Release,
-				Required: false,
+				Required:    false,
 				Usage:       "protoc-gen-go release",
 			},
 			&cli.BoolFlag{

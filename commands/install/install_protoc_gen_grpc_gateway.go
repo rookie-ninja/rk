@@ -12,33 +12,33 @@ import (
 )
 
 const (
-	ProtocGenGrpcGatewayOwner = "grpc-ecosystem"
-	ProtocGenGrpcGatewayRepo  = "grpc-gateway"
+	ProtocGenGrpcGatewayOwner   = "grpc-ecosystem"
+	ProtocGenGrpcGatewayRepo    = "grpc-gateway"
 	ProtocGenGrpcGatewayUrlBase = "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway"
 )
 
 type installProtocGenGrpcGatewayInfo struct {
 	ListReleases bool
-	Release string
+	Release      string
 }
 
 var InstallProtocGenGrpcGatewayInfo = installProtocGenGrpcGatewayInfo{
 	ListReleases: false,
-	Release: "",
+	Release:      "",
 }
 
 // Install protoc-gen-grpc-gateway on target hosts
-func InstallProtocGenGrpcGatewayCommand() *cli.Command{
+func InstallProtocGenGrpcGatewayCommand() *cli.Command {
 	command := &cli.Command{
-		Name: "protoc-gen-grpc-gateway",
-		Usage: "install protoc-gen-grpc-gateway on local machine",
+		Name:      "protoc-gen-grpc-gateway",
+		Usage:     "install protoc-gen-grpc-gateway on local machine",
 		UsageText: "rk install protoc-gen-grpc-gateway -r [release]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "release, r",
 				Aliases:     []string{"r"},
 				Destination: &InstallProtocGenGrpcGatewayInfo.Release,
-				Required: false,
+				Required:    false,
 				Usage:       "protoc-gen-grpc-gateway release",
 			},
 			&cli.BoolFlag{

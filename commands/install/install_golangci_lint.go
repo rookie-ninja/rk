@@ -12,33 +12,33 @@ import (
 )
 
 const (
-	GoLangCILintOwner = "golangci"
-	GoLangCILintRepo  = "golangci-lint"
+	GoLangCILintOwner   = "golangci"
+	GoLangCILintRepo    = "golangci-lint"
 	GoLangCILintUrlBase = "github.com/golangci/golangci-lint/cmd/golangci-lint"
 )
 
 type installGoLangCILintInfo struct {
 	ListReleases bool
-	Release string
+	Release      string
 }
 
 var InstallGoLangCILintInfo = installGoLangCILintInfo{
 	ListReleases: false,
-	Release: "",
+	Release:      "",
 }
 
 // Install golangci-lint on target hosts
-func InstallGoLangCILintCommand() *cli.Command{
+func InstallGoLangCILintCommand() *cli.Command {
 	command := &cli.Command{
-		Name: "golangci-lint",
-		Usage: "install golangci-lint on local machine",
+		Name:      "golangci-lint",
+		Usage:     "install golangci-lint on local machine",
 		UsageText: "rk install golangci-lint -r [release]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "release, r",
 				Aliases:     []string{"r"},
 				Destination: &InstallGoLangCILintInfo.Release,
-				Required: false,
+				Required:    false,
 				Usage:       "golangci-lint release",
 			},
 			&cli.BoolFlag{

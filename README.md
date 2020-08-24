@@ -56,6 +56,7 @@ COMMANDS:
    protoc-gen-go            install protoc-gen-go on local machine
    protoc-gen-grpc-gateway  install protoc-gen-grpc-gateway on local machine
    protoc-gen-swagger       install protoc-gen-swagger on local machine
+   protoc-gen-doc           install protoc-gen-doc on local machine
    golint                   install golint on local machine
    golangci-lint            install golangci-lint on local machine
    gocov                    install gocov on local machine
@@ -72,7 +73,8 @@ rk gen # Generate files from proto
 Subcommands
 ```shell script
 COMMANDS:
-   pb-go    generate go file from proto
+   pb-go    generate go & doc file from proto
+   pb-doc   generate documentation from proto
    help, h  Shows a list of commands or help for one command
 ```
 

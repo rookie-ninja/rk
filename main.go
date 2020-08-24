@@ -10,11 +10,11 @@ import (
 
 func main() {
 	app := &cli.App{
-		Name: "rk",
-		Usage: "rk utility command line tools",
-		Version: "1.0.0",
+		Name:        "rk",
+		Usage:       "rk utility command line tools",
+		Version:     "1.0.0",
 		Description: "rk is command line interface for utility tools during rk style software development lifecycle",
-		Commands: []*cli.Command {
+		Commands: []*cli.Command{
 			rk_install.Install(),
 			rk_gen.Gen(),
 		},

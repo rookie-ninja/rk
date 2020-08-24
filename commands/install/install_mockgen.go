@@ -12,33 +12,33 @@ import (
 )
 
 const (
-	MockGenOwner = "golang"
-	MockGenRepo  = "mock"
+	MockGenOwner   = "golang"
+	MockGenRepo    = "mock"
 	MockGenUrlBase = "github.com/golang/mock/mockgen"
 )
 
 type installMockGenInfo struct {
 	ListReleases bool
-	Release string
+	Release      string
 }
 
 var InstallMockGenInfo = installMockGenInfo{
 	ListReleases: false,
-	Release: "",
+	Release:      "",
 }
 
 // Install gocov on target hosts
-func InstallMockGenCommand() *cli.Command{
+func InstallMockGenCommand() *cli.Command {
 	command := &cli.Command{
-		Name: "mockgen",
-		Usage: "install mockgen on local machine",
+		Name:      "mockgen",
+		Usage:     "install mockgen on local machine",
 		UsageText: "rk install mockgen -r [release]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "release, r",
 				Aliases:     []string{"r"},
 				Destination: &InstallMockGenInfo.Release,
-				Required: false,
+				Required:    false,
 				Usage:       "mockgen release",
 			},
 			&cli.BoolFlag{

@@ -12,33 +12,33 @@ import (
 )
 
 const (
-	ProtocGenSwaggerOwner = "grpc-ecosystem"
-	ProtocGenSwaggerRepo  = "grpc-gateway"
+	ProtocGenSwaggerOwner   = "grpc-ecosystem"
+	ProtocGenSwaggerRepo    = "grpc-gateway"
 	ProtocGenSwaggerUrlBase = "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger"
 )
 
 type installProtocGenSwaggerInfo struct {
 	ListReleases bool
-	Release string
+	Release      string
 }
 
 var InstallProtocGenSwaggerInfo = installProtocGenSwaggerInfo{
 	ListReleases: false,
-	Release: "",
+	Release:      "",
 }
 
 // Install protoc-gen-swagger on target hosts
-func InstallProtocGenSwaggerCommand() *cli.Command{
+func InstallProtocGenSwaggerCommand() *cli.Command {
 	command := &cli.Command{
-		Name: "protoc-gen-swagger",
-		Usage: "install protoc-gen-swagger on local machine",
+		Name:      "protoc-gen-swagger",
+		Usage:     "install protoc-gen-swagger on local machine",
 		UsageText: "rk install protoc-gen-swagger -r [release]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "release, r",
 				Aliases:     []string{"r"},
 				Destination: &InstallProtocGenSwaggerInfo.Release,
-				Required: false,
+				Required:    false,
 				Usage:       "protoc-gen-swagger release",
 			},
 			&cli.BoolFlag{
