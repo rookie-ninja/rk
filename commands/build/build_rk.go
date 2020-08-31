@@ -258,20 +258,22 @@ func copyFiles(config *BuildGoConfig) error {
 	color.Green("[Done]")
 
 	// 5.4: copy assets/
-	color.Cyan("Copy files in assets folder to target/%s/assets", BuildGoInfo.AppName)
-	bytes, err = exec.Command("/bin/sh", "-c", fmt.Sprintf("cp -r assets/* %s", basePath+"/assets")).CombinedOutput()
-	if len(bytes) > 0 {
-		color.Blue("[stdout] %s", string(bytes))
-	}
-	if err != nil {
-		color.Red("[Failed]")
-		return err
-	}
+	if isValidPath("assets/") {
+		color.Cyan("Copy files in assets folder to target/%s/assets", BuildGoInfo.AppName)
+		bytes, err = exec.Command("/bin/sh", "-c", fmt.Sprintf("cp -r assets/* %s", basePath+"/assets")).CombinedOutput()
+		if len(bytes) > 0 {
+			color.Blue("[stdout] %s", string(bytes))
+		}
+		if err != nil {
+			color.Red("[Failed]")
+			return err
+		}
 
-	color.Green("[Done]")
+		color.Green("[Done]")
+	}
 
 	// 5.5: copy scripts/
-	color.Cyan("Copy files in assets folder to target/%s/scripts", BuildGoInfo.AppName)
+	color.Cyan("Copy files in scripts folder to target/%s/scripts", BuildGoInfo.AppName)
 	bytes, err = exec.Command("/bin/sh", "-c", fmt.Sprintf("cp -r scripts/* %s", basePath+"/scripts")).CombinedOutput()
 	if len(bytes) > 0 {
 		color.Blue("[stdout] %s", string(bytes))
