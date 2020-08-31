@@ -1,6 +1,7 @@
 package main
 
 import (
+	rk_build "github.com/rookie-ninja/rk/commands/build"
 	"github.com/rookie-ninja/rk/commands/gen"
 	"github.com/rookie-ninja/rk/commands/install"
 	rk_test "github.com/rookie-ninja/rk/commands/test"
@@ -19,6 +20,7 @@ func main() {
 			rk_install.Install(),
 			rk_gen.Gen(),
 			rk_test.Test(),
+			rk_build.Build(),
 		},
 	}
 

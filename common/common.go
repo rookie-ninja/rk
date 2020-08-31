@@ -34,3 +34,4 @@ func GetSysAndArch() string {
 	}
 	return sysArch
 }
+

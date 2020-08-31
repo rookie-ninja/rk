@@ -28,7 +28,7 @@ var UtGoInfo = utGoInfo{
 	ConfigFilePath: "",
 }
 
-// Generate Go files from proto
+// Run unit test
 func UtGoCommand() *cli.Command {
 	command := &cli.Command{
 		Name:      "ut-go",

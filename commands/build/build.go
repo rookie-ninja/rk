@@ -1,30 +1,30 @@
-package rk_test
+package rk_build
 
 import "github.com/urfave/cli/v2"
 
-func Test() *cli.Command {
+type buildInfo struct {
+	Debug bool
+}
+
+var BuildInfo = buildInfo{}
+
+func Build() *cli.Command {
 	command := &cli.Command{
-		Name:      "test",
-		Usage:     "Run unit test",
-		UsageText: "rk test [third-party file]",
+		Name:      "build",
+		Usage:     "build project",
+		UsageText: "rk build",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:        "debug",
 				Aliases:     []string{"d"},
 				Usage:       "debug mod",
-				Destination: &TestInfo.Debug,
+				Destination: &BuildInfo.Debug,
 			},
 		},
 		Subcommands: []*cli.Command{
-			UtGoCommand(),
+			BuildGoCommand(),
 		},
 	}
 
 	return command
 }
-
-type testInfo struct {
-	Debug bool
-}
-
-var TestInfo = testInfo{}

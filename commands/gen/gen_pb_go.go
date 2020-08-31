@@ -45,7 +45,7 @@ func GenPbGoCommand() *cli.Command {
 		UsageText: "rk gen pb-go -s [source] -i [import] -f [file]",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:        "config file, f",
+				Name:        "config, f",
 				Aliases:     []string{"f"},
 				Destination: &GenPbGoInfo.ConfigFilePath,
 				Required:    false,
@@ -218,6 +218,9 @@ func addSources(sources []string, args *[]string) error {
 
 func readProtoConfig() *ProtoConfig {
 	var config *ProtoConfig
+
+
+
 	if len(GenPbGoInfo.ConfigFilePath) > 0 {
 		config = fromConfigFile()
 	}
