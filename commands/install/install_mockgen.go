@@ -1,14 +1,9 @@
 package rk_install
 
 import (
-	"context"
-	"fmt"
-	"github.com/fatih/color"
-	"github.com/google/go-github/v32/github"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
-	"strings"
 )
 
 const (
@@ -17,17 +12,7 @@ const (
 	MockGenUrlBase = "github.com/golang/mock/mockgen"
 )
 
-type installMockGenInfo struct {
-	ListReleases bool
-	Release      string
-}
-
-var InstallMockGenInfo = installMockGenInfo{
-	ListReleases: false,
-	Release:      "",
-}
-
-// Install gocov on target hosts
+// Install mockgen on target hosts with go get command
 func InstallMockGenCommand() *cli.Command {
 	command := &cli.Command{
 		Name:      "mockgen",
@@ -37,14 +22,14 @@ func InstallMockGenCommand() *cli.Command {
 			&cli.StringFlag{
 				Name:        "release, r",
 				Aliases:     []string{"r"},
-				Destination: &InstallMockGenInfo.Release,
+				Destination: &InstallInfo.Release,
 				Required:    false,
 				Usage:       "mockgen release",
 			},
 			&cli.BoolFlag{
 				Name:        "list, l",
 				Aliases:     []string{"l"},
-				Destination: &InstallMockGenInfo.ListReleases,
+				Destination: &InstallInfo.ListReleases,
 				Usage:       "list mockgen releases, list most recent 10 releases",
 			},
 		},
@@ -54,74 +39,23 @@ func InstallMockGenCommand() *cli.Command {
 	return command
 }
 
-func listMockGenReleases() error {
-	opt := &github.ListOptions{
-		PerPage: 10,
-	}
-
-	res, _, err := rk_common.GithubClient.Repositories.ListReleases(context.Background(), MockGenOwner, MockGenRepo, opt)
-	if err != nil {
-		color.Red("failed to list mockgen release from github\n[err] %v", err)
-		return err
-	}
-
-	for i := range res {
-		color.Cyan("%s", res[i].GetTagName())
-	}
-
-	if len(res) < 1 {
-		color.Cyan("no release found, please use default release")
-	}
-
-	return nil
-}
-
 func InstallMockGenAction(ctx *cli.Context) error {
-	if InstallMockGenInfo.ListReleases {
-		return listMockGenReleases()
+	if InstallInfo.ListReleases {
+		event := rk_common.GetEvent("list-mock-gen-release")
+		return PrintReleasesFromGithub(MockGenOwner, MockGenRepo, event)
 	}
 
-	// install pkg
-	color.Cyan("Install mockgen %s", InstallMockGenInfo.Release)
-	err := installMockGen()
-	if err != nil {
+	event := rk_common.GetEvent("install-mock-gen")
+	// go get package
+	if err := GoGetFromGithub(MockGenRepo, MockGenUrlBase, InstallInfo.Release, event); err != nil {
 		return err
 	}
-	color.Green("[Success]")
+	Success()
 
-	color.Cyan("Validate installation")
-	return validateMockGenInstallation()
-}
-
-func installMockGen() error {
-	url := fmt.Sprintf(MockGenUrlBase)
-
-	if len(InstallMockGenInfo.Release) > 1 {
-		url += fmt.Sprintf("@%s", InstallMockGenInfo.Release)
-	}
-
-	bytes, err := exec.Command("go", "get", "-v", url).CombinedOutput()
-	if err != nil {
-		color.Red("failed to install mockgen\n[err] %v", err)
-		color.Red("[stderr] %s", string(bytes))
+	if err := ValidateInstallation(exec.Command("which", "mockgen"), event); err != nil {
 		return err
 	}
 
-	if InstallInfo.Debug {
-		color.Blue("[stdout] %s", string(bytes))
-	}
-
-	return nil
-}
-
-func validateMockGenInstallation() error {
-	bytes, err := exec.Command("which", "mockgen").CombinedOutput()
-	if err != nil {
-		color.Red("failed to validate mockgen\n[err] %v", err)
-		color.Red("[stderr] %s", string(bytes))
-		return err
-	}
-
-	color.Green("[%s]", strings.TrimRight(string(bytes), "\n"))
+	rk_common.Finish(event, nil)
 	return nil
 }

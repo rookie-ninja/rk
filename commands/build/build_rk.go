@@ -14,26 +14,26 @@ import (
 )
 
 type BuildGoConfig struct {
-	AppName string   `yaml:"appName"`
-	BuildGo *BuildGo `yaml:"build"`
-	Env map[string]string `yaml:"env"`
+	AppName string            `yaml:"appName"`
+	BuildGo *BuildGo          `yaml:"build"`
+	Env     map[string]string `yaml:"env"`
 }
 type BuildGo struct {
-	GoOs     string   `yaml:"goos"`
-	GoArch   string   `yaml:"goarch"`
+	GoOs   string `yaml:"goos"`
+	GoArch string `yaml:"goarch"`
 }
 
 type buildGoInfo struct {
-	AppName      string
-	GoOs         string
-	GoArch       string
+	AppName        string
+	GoOs           string
+	GoArch         string
 	ConfigFilePath string
 }
 
 var BuildGoInfo = buildGoInfo{
-	AppName:      "",
-	GoOs:         "",
-	GoArch:       "",
+	AppName:        "",
+	GoOs:           "",
+	GoArch:         "",
 	ConfigFilePath: "",
 }
 
@@ -63,7 +63,6 @@ func BuildGoCommand() *cli.Command {
 				Required:    false,
 				Usage:       "set goarch",
 			},
-
 		},
 		Action: BuildGoAction,
 	}
@@ -118,8 +117,8 @@ func compileProto(ctx *cli.Context) error {
 	cmd := rk_gen.GenPbGoCommand()
 	cmd.Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:  "config, f",
-			Value: BuildGoInfo.ConfigFilePath,
+			Name:        "config, f",
+			Value:       BuildGoInfo.ConfigFilePath,
 			Destination: &rk_gen.GenPbGoInfo.ConfigFilePath,
 		},
 	}
@@ -290,8 +289,8 @@ func copyFiles(config *BuildGoConfig) error {
 	// 5.6 Export .env file
 	color.Cyan("Export env as target/%s/.env", BuildGoInfo.AppName)
 	// create .env
-	os.RemoveAll(basePath+"/.env")
-	file, err := os.Create(basePath+"/.env")
+	os.RemoveAll(basePath + "/.env")
+	file, err := os.Create(basePath + "/.env")
 	if err != nil {
 		color.Red("[stderr] %v", err)
 		color.Red("[Failed]")
@@ -299,7 +298,7 @@ func copyFiles(config *BuildGoConfig) error {
 	}
 	if config != nil && config.Env != nil {
 		for k, v := range config.Env {
-			_, err := file.WriteString(k+"="+v+"\n")
+			_, err := file.WriteString(k + "=" + v + "\n")
 			if err != nil {
 				color.Red("[stderr] %v", err)
 				color.Red("[Failed]")
@@ -308,7 +307,7 @@ func copyFiles(config *BuildGoConfig) error {
 		}
 	}
 
-	file.WriteString("appName="+BuildGoInfo.AppName)
+	file.WriteString("appName=" + BuildGoInfo.AppName)
 	file.Sync()
 
 	color.Green("[Done]")

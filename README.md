@@ -15,6 +15,7 @@ rk lets you:
   - [Command Overview](#command-overview)
     - [rk help](#rk-help)
     - [rk install](#rk-install)
+    - [rk uninstall](#rk-uninstall)
     - [rk gen](#rk-gen)
     - [rk test](#rk-test)
   - [Development Status: Stable](#development-status-stable)
@@ -32,10 +33,11 @@ We'll start with a general overview of the commands.
 There are more commands, and we will get into] usage below, but this shows the basic functionality.
 
 ```shell script
-   install  Install third-party software
-   gen      Generate files
-   test     Run unit test
-   help, h  Shows a list of commands or help for one command
+   install    Install third-party software
+   uninstall  Uninstall third-party software
+   gen        Generate files
+   test       Run unit test
+   help, h    Shows a list of commands or help for one command
 ```
 
 ## Command Overview
@@ -63,8 +65,30 @@ COMMANDS:
    golangci-lint            install golangci-lint on local machine
    gocov                    install gocov on local machine
    mockgen                  install mockgen on local machine
+   swag                     install swag on local machine
    rk-std                   install rk standard environment on local machine
    help, h                  Shows a list of commands or help for one command
+```
+
+### rk uninstall
+```shell script
+rk uninstall 
+```
+
+Subcommands
+```shell script
+COMMANDS:
+   swag                uninstall swag on local machine
+   gocov               uninstall gocov on local machine
+   golint              uninstall golint on local machine
+   golangci-lint       uninstall golangci-lint on local machine
+   golangci-lint       uninstall golangci-lint on local machine
+   protobuf            uninstall protobuf on local machine
+   protoc-gen-doc      uninstall protoc-gen-doc on local machine
+   protoc-gen-go       uninstall protoc-gen-go on local machine
+   protoc-gen-swagger  uninstall protoc-gen-swagger on local machine
+   rk-std              uninstall rk standard environment on local machine
+   help, h             Shows a list of commands or help for one command
 ```
 
 ### rk gen
@@ -83,7 +107,7 @@ COMMANDS:
 
 ### rk test
 ```shell script
-rk test # Generate files from proto
+rk test # Run unit test
 ```
 
 Subcommands

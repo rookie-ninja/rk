@@ -1,10 +1,11 @@
 package main
 
 import (
-	rk_build "github.com/rookie-ninja/rk/commands/build"
+	"github.com/rookie-ninja/rk/commands/build"
 	"github.com/rookie-ninja/rk/commands/gen"
 	"github.com/rookie-ninja/rk/commands/install"
-	rk_test "github.com/rookie-ninja/rk/commands/test"
+	"github.com/rookie-ninja/rk/commands/test"
+	"github.com/rookie-ninja/rk/commands/uninstall"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
@@ -21,6 +22,7 @@ func main() {
 			rk_gen.Gen(),
 			rk_test.Test(),
 			rk_build.Build(),
+			rk_uninstall.Uninstall(),
 		},
 	}
 

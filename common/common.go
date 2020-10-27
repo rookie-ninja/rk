@@ -1,37 +1,79 @@
 package rk_common
 
 import (
-	"github.com/google/go-github/v32/github"
+	"fmt"
+	"github.com/google/uuid"
+	"github.com/rookie-ninja/rk-logger"
+	"github.com/rookie-ninja/rk-query"
+	"go.uber.org/zap"
 	"os"
 	"path"
-	"runtime"
+	"time"
 )
 
 var (
-	GithubClient = github.NewClient(nil)
-	RkHomeDir    = "./"
+	confStr = `{
+     "level": "info",
+     "encoding": "console",
+     "outputPaths": ["%s"],
+     "errorOutputPaths": ["stderr"],
+     "initialFields": {},
+     "encoderConfig": {
+       "messageKey": "msg",
+       "levelKey": "",
+       "nameKey": "",
+       "timeKey": "",
+       "callerKey": "",
+       "stacktraceKey": "",
+       "callstackKey": "",
+       "errorKey": "",
+       "timeEncoder": "iso8601",
+       "fileKey": "",
+       "levelEncoder": "capital",
+       "durationEncoder": "second",
+       "callerEncoder": "full",
+       "nameEncoder": "full"
+     },
+    "maxsize": 1,
+    "maxage": 7,
+    "maxbackups": 3,
+    "localtime": true,
+    "compress": true
+   }`
+
+	logger  *zap.Logger
+	factory *rk_query.EventFactory
 )
 
 func init() {
 	userHomeDir, _ := os.UserHomeDir()
-	RkHomeDir = path.Join(userHomeDir, ".rk")
-	os.MkdirAll(RkHomeDir, os.ModePerm)
+	rkDir := path.Join(userHomeDir, ".rk/logs")
+	os.MkdirAll(rkDir, os.ModePerm)
+
+	bytes := []byte(fmt.Sprintf(confStr, path.Join(rkDir, "query.log")))
+
+	logger, _, _ = rk_logger.NewZapLoggerWithBytes(bytes, rk_logger.JSON)
+	factory = rk_query.NewEventFactory(
+		rk_query.WithAppName("rk-cmd"),
+		rk_query.WithLogger(logger))
 }
 
-func StdOut(input string) {
-	println(input)
+func GetEvent(op string) rk_query.Event {
+	event := factory.CreateEvent()
+	event.SetOperation(op)
+	event.SetStartTime(time.Now())
+	return event
 }
 
-func GetSysAndArch() string {
-	var sysArch string
-
-	if runtime.GOOS == "darwin" {
-		sysArch = "osx-x86_64"
-	} else if runtime.GOOS == "win" {
-		sysArch = "win64"
+func Finish(event rk_query.Event, err error) {
+	if err != nil {
+		event.AddErr(err)
+		event.SetResCode("Failed")
 	} else {
-		sysArch = "linux-x86_64"
+		event.SetResCode("Success")
 	}
-	return sysArch
-}
 
+	event.SetEventId(uuid.New().String())
+	event.SetEndTime(time.Now())
+	event.WriteLog()
+}

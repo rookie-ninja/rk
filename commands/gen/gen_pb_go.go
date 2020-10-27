@@ -219,8 +219,6 @@ func addSources(sources []string, args *[]string) error {
 func readProtoConfig() *ProtoConfig {
 	var config *ProtoConfig
 
-
-
 	if len(GenPbGoInfo.ConfigFilePath) > 0 {
 		config = fromConfigFile()
 	}

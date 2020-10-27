@@ -1,19 +1,11 @@
 package rk_install
 
 import (
-	"context"
-	"errors"
-	"fmt"
 	"github.com/fatih/color"
-	"github.com/google/go-github/v32/github"
 	"github.com/rookie-ninja/rk/common"
-	"github.com/schollz/progressbar/v3"
 	"github.com/urfave/cli/v2"
-	"io"
-	"net/http"
-	"os"
 	"os/exec"
-	"path"
+	"runtime"
 	"strings"
 )
 
@@ -21,16 +13,6 @@ const (
 	ProtobufOwner = "protocolbuffers"
 	ProtobufRepo  = "protobuf"
 )
-
-type installProtobufInfo struct {
-	ListReleases bool
-	Release      string
-}
-
-var InstallProtobufInfo = installProtobufInfo{
-	ListReleases: false,
-	Release:      "latest",
-}
 
 // Install protobuf on target hosts
 func InstallProtobufCommand() *cli.Command {
@@ -42,13 +24,13 @@ func InstallProtobufCommand() *cli.Command {
 			&cli.StringFlag{
 				Name:        "release, r",
 				Aliases:     []string{"r"},
-				Destination: &InstallProtobufInfo.Release,
+				Destination: &InstallInfo.Release,
 				Usage:       "protobuf release",
 			},
 			&cli.BoolFlag{
 				Name:        "list, l",
 				Aliases:     []string{"l"},
-				Destination: &InstallProtobufInfo.ListReleases,
+				Destination: &InstallInfo.ListReleases,
 				Usage:       "list protobuf releases, list most recent 10 releases",
 			},
 		},
@@ -59,171 +41,65 @@ func InstallProtobufCommand() *cli.Command {
 }
 
 func InstallProtobufAction(ctx *cli.Context) error {
-	if InstallProtobufInfo.ListReleases {
-		return listProtobufReleases()
+	if InstallInfo.ListReleases {
+		event := rk_common.GetEvent("list-protobuf-release")
+		return PrintReleasesFromGithub(ProtobufOwner, ProtobufRepo, event)
 	}
 
-	// get package id
-	color.Cyan("Get release id of release:%s", InstallProtobufInfo.Release)
-	id, release, err := getProtobufReleaseId(InstallProtobufInfo.Release)
+	event := rk_common.GetEvent("install-protobuf")
+	// 1: get release context
+	releaseCtx, err := GetReleaseContext(ProtobufOwner, ProtobufRepo, InstallInfo.Release, event)
 	if err != nil {
 		return err
 	}
-	color.Green("[Success]")
+	Success()
 
-	// download from github
-	pkgName := fmt.Sprintf("protoc-%s-%s.zip", release, rk_common.GetSysAndArch())
-	color.Cyan("Download %s to %s", pkgName, rk_common.RkHomeDir)
-	pkgPath, err := downloadProtobuf(pkgName, id)
-	if err != nil {
-		return err
-	}
-	color.Green("[Success]")
-
-	// install
-	color.Cyan("Install protobuf at %s", pkgPath)
-	err = installProtobuf(pkgPath)
-	if err != nil {
-		return err
-	}
-	color.Green("[Success]")
-
-	// show version
-	color.Cyan("Validate installation")
-	return validateProtobufInstallation()
-}
-
-// list available protobuf releases from github by 10 records
-func listProtobufReleases() error {
-	opt := &github.ListOptions{PerPage: 10}
-
-	res, _, err := rk_common.GithubClient.Repositories.ListReleases(context.Background(), ProtobufOwner, ProtobufRepo, opt)
-	if err != nil {
-		color.Red("failed to list protobuf release from github\n[err] %v", err)
-		return err
-	}
-
-	for i := range res {
-		color.Cyan("%s", res[i].GetTagName())
-	}
-
-	if len(res) < 1 {
-		color.Cyan("no release found, please use default release")
-	}
-
-	return nil
-}
-
-// download to local
-func downloadProtobuf(fullName string, id int64) (string, error) {
-	reader, _, err := rk_common.GithubClient.Repositories.DownloadReleaseAsset(
-		context.Background(),
-		ProtobufOwner,
-		ProtobufRepo,
-		id,
-		http.DefaultClient)
-
-	if err != nil {
-		color.Red("failed to call github API for download Assert id:%d\n[err] %v", id, err)
-		return "", err
-	}
-
-	pkgPath := path.Join(rk_common.RkHomeDir, fullName)
-	f, err := os.OpenFile(pkgPath, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		color.Red("failed to open file at %s\n[err] %v", pkgPath, err)
-		return "", err
-	}
-	defer f.Close()
-
-	bar := progressbar.DefaultBytes(-1, "downloading")
-	_, err = io.Copy(io.MultiWriter(f, bar), reader)
-	if err != nil {
-		if InstallInfo.Debug {
-			color.Red("failed to write to file at %s\n[err] %v", pkgPath, err)
+	// 2: download from github
+	// 2.1: specify filter based on pattern
+	// https://github.com/protocolbuffers/protobuf/releases
+	releaseCtx.Filter = func(url string) bool {
+		var sysArch string
+		if runtime.GOOS == "darwin" {
+			sysArch = "osx-x86_64"
+		} else if runtime.GOOS == "win" {
+			sysArch = "win64"
+		} else {
+			sysArch = "linux-x86_64"
 		}
-	}
-	println()
-	return pkgPath, nil
-}
 
-// install
-func installProtobuf(filePath string) error {
-	// unzip file
-	bytes, err := exec.Command("unzip", "-o", filePath, "-d", "/usr/local", "bin/protoc").CombinedOutput()
-
-	if err != nil {
-		color.Red("failed to unzip bin/proto to /usr/local\n[err] %v", err)
-		color.Red("[stderr] %s", string(bytes))
-		return err
-	}
-
-	bytes, err = exec.Command("unzip", "-o", filePath, "-d", "/usr/local", "include/*").CombinedOutput()
-
-	if err != nil {
-		color.Red("failed to unzip include/* to /usr/local\n[err] %v", err)
-		color.Red("[stderr] %s", string(bytes))
-		return err
-	}
-
-	return nil
-}
-
-// show version
-func validateProtobufInstallation() error {
-	bytes, err := exec.Command("protoc", "--version").CombinedOutput()
-	if err != nil {
-		color.Red("failed to show protobuf version\n[err] %v", err)
-		color.Red("[stderr] %s", string(bytes))
-		return err
-	}
-
-	color.Green("[%s]", strings.TrimRight(string(bytes), "\n"))
-	return nil
-}
-
-// get latest
-func getLatestProtobufRelease() (string, error) {
-	opt := &github.ListOptions{PerPage: 1}
-
-	res, _, err := rk_common.GithubClient.Repositories.ListReleases(context.Background(), ProtobufOwner, ProtobufRepo, opt)
-	if err != nil {
-		color.Red("failed to get protobuf latest release from github\n[err] %v", err)
-		return "", err
-	}
-
-	if len(res) < 1 {
-		color.Red("empty release from github")
-		return "", errors.New("empty release")
-	}
-
-	return res[0].GetName(), nil
-}
-
-// get release id with release name
-func getProtobufReleaseId(release string) (int64, string, error) {
-	if len(release) < 1 || release == "latest" {
-		var err error
-		release, err = getLatestProtobufRelease()
-		if err != nil {
-			return -1, "", err
-		}
-	}
-
-	res, _, err := rk_common.GithubClient.Repositories.GetReleaseByTag(context.Background(), ProtobufOwner, ProtobufRepo, release)
-
-	if err != nil {
-		color.Red("failed to list protobuf release from github\n[err] %v", err)
-		return -1, "", err
-	}
-
-	sysArch := rk_common.GetSysAndArch()
-	for i := range res.Assets {
-		url := *(res.Assets[i].BrowserDownloadURL)
 		if strings.Contains(url, sysArch) {
-			return res.Assets[i].GetID(), release, nil
+			return true
 		}
+
+		return false
 	}
 
-	return -1, "", nil
+	// 2.2: download with filter
+	DownloadGithubRelease(releaseCtx, event)
+	if err != nil {
+		return err
+	}
+	Success()
+
+	// 3: install release
+	color.Cyan("Install protoc in %s to %s", releaseCtx.LocalFilePath, UserLocalBin)
+	releaseCtx.ExtractType = "zip"
+	releaseCtx.ExtractPath = "bin/protoc"
+	if err = ExtractToDest(releaseCtx, event); err != nil {
+		return err
+	}
+	releaseCtx.ExtractPath = "include/*"
+	releaseCtx.DestPath = UserLocalInclude
+	if err = ExtractToDest(releaseCtx, event); err != nil {
+		return err
+	}
+	Success()
+
+	// 4: validate installation
+	if err := ValidateInstallation(exec.Command("protoc", "--version"), event); err != nil {
+		return err
+	}
+
+	rk_common.Finish(event, nil)
+	return nil
 }

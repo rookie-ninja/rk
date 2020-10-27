@@ -1,33 +1,20 @@
 package rk_install
 
 import (
-	"context"
-	"fmt"
 	"github.com/fatih/color"
-	"github.com/google/go-github/v32/github"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
 const (
-	GoLangCILintOwner   = "golangci"
-	GoLangCILintRepo    = "golangci-lint"
-	GoLangCILintUrlBase = "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	GoLangCILintOwner = "golangci"
+	GoLangCILintRepo  = "golangci-lint"
 )
 
-type installGoLangCILintInfo struct {
-	ListReleases bool
-	Release      string
-}
-
-var InstallGoLangCILintInfo = installGoLangCILintInfo{
-	ListReleases: false,
-	Release:      "",
-}
-
-// Install golangci-lint on target hosts
+// Install golangci-lint on target hosts directly download assets from github
 func InstallGoLangCILintCommand() *cli.Command {
 	command := &cli.Command{
 		Name:      "golangci-lint",
@@ -37,14 +24,14 @@ func InstallGoLangCILintCommand() *cli.Command {
 			&cli.StringFlag{
 				Name:        "release, r",
 				Aliases:     []string{"r"},
-				Destination: &InstallGoLangCILintInfo.Release,
+				Destination: &InstallInfo.Release,
 				Required:    false,
 				Usage:       "golangci-lint release",
 			},
 			&cli.BoolFlag{
 				Name:        "list, l",
 				Aliases:     []string{"l"},
-				Destination: &InstallGoLangCILintInfo.ListReleases,
+				Destination: &InstallInfo.ListReleases,
 				Usage:       "list golangci-lint releases, list most recent 10 releases",
 			},
 		},
@@ -54,74 +41,54 @@ func InstallGoLangCILintCommand() *cli.Command {
 	return command
 }
 
-func listGoLangCILintReleases() error {
-	opt := &github.ListOptions{
-		PerPage: 10,
-	}
-
-	res, _, err := rk_common.GithubClient.Repositories.ListReleases(context.Background(), GoLangCILintOwner, GoLangCILintRepo, opt)
-	if err != nil {
-		color.Red("failed to list golangci-lint release from github\n[err] %v", err)
-		return err
-	}
-
-	for i := range res {
-		color.Cyan("%s", res[i].GetTagName())
-	}
-
-	if len(res) < 1 {
-		color.Cyan("no release found, please use default release")
-	}
-
-	return nil
-}
-
 func InstallGoLangCILintAction(ctx *cli.Context) error {
-	if InstallGoLangCILintInfo.ListReleases {
-		return listGoLangCILintReleases()
+	if InstallInfo.ListReleases {
+		event := rk_common.GetEvent("list-golangci-lint-release")
+		return PrintReleasesFromGithub(GoLangCILintOwner, GoLangCILintRepo, event)
 	}
 
-	// install pkg
-	color.Cyan("Install golangci-lint %s", InstallGoLangCILintInfo.Release)
-	err := installGoLangCILint()
+	event := rk_common.GetEvent("install-golangci-lint")
+	// 1: get release context
+	releaseCtx, err := GetReleaseContext(GoLangCILintOwner, GoLangCILintRepo, InstallInfo.Release, event)
 	if err != nil {
 		return err
 	}
-	color.Green("[Success]")
+	Success()
 
-	color.Cyan("Validate installation")
-	return validateGoLangCILintInstallation()
-}
+	// 2.1: specify filter based on pattern
+	// https://github.com/golangci/golangci-lint/releases
+	releaseCtx.Filter = func(url string) bool {
+		sysArch := runtime.GOOS + "-" + runtime.GOARCH
 
-func installGoLangCILint() error {
-	url := fmt.Sprintf(GoLangCILintUrlBase)
+		if strings.Contains(url, sysArch) {
+			return true
+		}
 
-	if len(InstallGoLangCILintInfo.Release) > 1 {
-		url += fmt.Sprintf("@%s", InstallGoLangCILintInfo.Release)
+		return false
 	}
 
-	bytes, err := exec.Command("go", "get", "-v", url).CombinedOutput()
+	// 2.2: download with filter
+	DownloadGithubRelease(releaseCtx, event)
 	if err != nil {
-		color.Red("failed to install golangci-lint\n[err] %v", err)
-		color.Red("[stderr] %s", string(bytes))
+		return err
+	}
+	Success()
+
+	// 3: install release
+	color.Cyan("Install golangci-lint in %s to %s", releaseCtx.LocalFilePath, UserLocalBin)
+	releaseCtx.ExtractType = "tar"
+	releaseCtx.ExtractArg = "--strip-components=1"
+	releaseCtx.ExtractPath = "golangci-lint"
+	if err = ExtractToDest(releaseCtx, event); err != nil {
+		return err
+	}
+	Success()
+
+	// 4: validate installation
+	if err := ValidateInstallation(exec.Command("golangci-lint", "--version"), event); err != nil {
 		return err
 	}
 
-	if InstallInfo.Debug {
-		color.Blue("[stdout] %s", string(bytes))
-	}
-
-	return nil
-}
-
-func validateGoLangCILintInstallation() error {
-	bytes, err := exec.Command("golangci-lint", "--version").CombinedOutput()
-	if err != nil {
-		color.Red("failed to validate golangci-lint\n[err] %v", err)
-		color.Red("[stderr] %s", string(bytes))
-		return err
-	}
-
-	color.Green("[%s]", strings.TrimRight(string(bytes), "\n"))
+	rk_common.Finish(event, nil)
 	return nil
 }

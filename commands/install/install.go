@@ -26,6 +26,7 @@ func Install() *cli.Command {
 			InstallGoLangCILintCommand(),
 			InstallGoCovCommand(),
 			InstallMockGenCommand(),
+			InstallSwagCommand(),
 			InstallRkStdCommand(),
 		},
 	}
@@ -34,7 +35,9 @@ func Install() *cli.Command {
 }
 
 type installInfo struct {
-	Debug bool
+	Debug        bool
+	ListReleases bool
+	Release      string
 }
 
 var InstallInfo = installInfo{}

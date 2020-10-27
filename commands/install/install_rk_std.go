@@ -12,7 +12,7 @@ func InstallRkStdCommand() *cli.Command {
 	command := &cli.Command{
 		Name:      "rk-std",
 		Usage:     "install rk standard environment on local machine",
-		UsageText: "rk install rk-std -r [release]",
+		UsageText: "rk install rk-std",
 		Action:    InstallRkStdAction,
 	}
 
@@ -25,7 +25,7 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	if err := InstallProtobufAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[Success]")
+	color.Magenta("[success]")
 	color.White(EOE)
 
 	// install protoc-gen-go
@@ -33,7 +33,7 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	if err := InstallProtocGenGoAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[Success]")
+	color.Magenta("[success]")
 	color.White(EOE)
 
 	// install protoc-gen-grpc-gateway
@@ -41,49 +41,62 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	if err := InstallProtocGenGrpcGatewayAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[Success]")
+	color.Magenta("[success]")
 	color.White(EOE)
 
-	color.Magenta("[4] Install protoc-gen-grpc-gateway")
-	if err := InstallProtocGenGrpcGatewayAction(ctx); err != nil {
+	// install protoc-gen-doc
+	color.Magenta("[4] Install protoc-gen-doc")
+	if err := InstallProtocGenDocAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[Success]")
+	color.Magenta("[success]")
 	color.White(EOE)
 
+	// install protoc-gen-swagger
 	color.Magenta("[5] Install protoc-gen-swagger")
 	if err := InstallProtocGenSwaggerAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[Success]")
+	color.Magenta("[success]")
 	color.White(EOE)
 
+	// install mockgen
 	color.Magenta("[6] Install mockgen")
 	if err := InstallMockGenAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[Success]")
+	color.Magenta("[success]")
 	color.White(EOE)
 
+	// install golangci-lint
 	color.Magenta("[7] Install golangci-lint")
 	if err := InstallGoLangCILintAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[Success]")
+	color.Magenta("[success]")
 	color.White(EOE)
 
+	// install gocov
 	color.Magenta("[8] Install gocov")
 	if err := InstallGoCovAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[Success]")
+	color.Magenta("[success]")
 	color.White(EOE)
 
-	color.Magenta("[9] Install protoc-gen-doc")
-	if err := InstallProtocGenDocAction(ctx); err != nil {
+	color.Magenta("[9] Install golint")
+	if err := InstallGoLintAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[Success]")
+	color.Magenta("[success]")
+	color.White(EOE)
+
+	// install swag
+	color.Magenta("[10] Install swag")
+	if err := InstallSwagAction(ctx); err != nil {
+		return err
+	}
+	color.Magenta("[success]")
 	color.White(EOE)
 
 	return nil
