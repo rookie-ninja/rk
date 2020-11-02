@@ -33,6 +33,7 @@ func Install() *cli.Command {
 			InstallSwagCommand(),
 			InstallRkStdCommand(),
 			InstallCfsslCommand(),
+			InstallCfsslJsonCommand(),
 		},
 	}
 

@@ -68,6 +68,7 @@ COMMANDS:
    swag                     install swag on local machine
    rk-std                   install rk standard environment on local machine
    cfssl                    install cfssl on local machine
+   cfssljson                install cfssljson on local machine
    help, h                  Shows a list of commands or help for one command
 ```
 
@@ -90,6 +91,7 @@ COMMANDS:
    protoc-gen-swagger  uninstall protoc-gen-swagger on local machine
    rk-std              uninstall rk standard environment on local machine
    cfssl               uninstall cfssl on local machine
+   cfssljson           uninstall cfssljson on local machine
    help, h             Shows a list of commands or help for one command
 ```
 

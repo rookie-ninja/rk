@@ -32,6 +32,7 @@ func Uninstall() *cli.Command {
 			UninstallProtocGenSwaggerCommand(),
 			UninstallRkStdCommand(),
 			UninstallCfsslCommand(),
+			UninstallCfsslJsonCommand(),
 		},
 	}
 
