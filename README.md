@@ -67,6 +67,7 @@ COMMANDS:
    mockgen                  install mockgen on local machine
    swag                     install swag on local machine
    rk-std                   install rk standard environment on local machine
+   cfssl                    install cfssl on local machine
    help, h                  Shows a list of commands or help for one command
 ```
 
@@ -88,6 +89,7 @@ COMMANDS:
    protoc-gen-go       uninstall protoc-gen-go on local machine
    protoc-gen-swagger  uninstall protoc-gen-swagger on local machine
    rk-std              uninstall rk standard environment on local machine
+   cfssl               uninstall cfssl on local machine
    help, h             Shows a list of commands or help for one command
 ```
 

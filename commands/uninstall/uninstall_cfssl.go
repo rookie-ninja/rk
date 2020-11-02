@@ -11,24 +11,24 @@ import (
 	"os/exec"
 )
 
-// Install protoc-gen-go on target hosts
-func UninstallProtocGenGoCommand() *cli.Command {
+// Install cfssl on target hosts
+func UninstallCfsslCommand() *cli.Command {
 	command := &cli.Command{
-		Name:      "protoc-gen-go",
-		Usage:     "uninstall protoc-gen-go on local machine",
-		UsageText: "rk uninstall protoc-gen-go",
-		Action:    UninstallProtocGenGoAction,
+		Name:      "cfssl",
+		Usage:     "uninstall cfssl on local machine",
+		UsageText: "rk uninstall cfssl",
+		Action:    UninstallCfsslAction,
 	}
 
 	return command
 }
 
-func UninstallProtocGenGoAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-protoc-gen-go")
+func UninstallCfsslAction(ctx *cli.Context) error {
+	event := rk_common.GetEvent("uninstall-cfssl")
 	defer rk_common.Finish(event, nil)
 
 	// check path
-	path := CheckPath("protoc-gen-go", event)
+	path := CheckPath("cfssl", event)
 
 	if len(path) < 1 {
 		Success()
@@ -36,7 +36,7 @@ func UninstallProtocGenGoAction(ctx *cli.Context) error {
 	}
 
 	// uninstall release
-	color.Cyan("Uninstall protoc-gen-go at %s", path)
+	color.Cyan("Uninstall cfssl at %s", path)
 	exec.Command("rm", path).CombinedOutput()
 	Success()
 	return nil

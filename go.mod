@@ -16,7 +16,9 @@ require (
 	github.com/urfave/cli/v2 v2.2.0
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0
+	golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
+	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f // indirect
 	golang.org/x/tools v0.0.0-20200820010801-b793a1359eac // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.2.8
