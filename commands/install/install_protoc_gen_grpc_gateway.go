@@ -13,7 +13,7 @@ import (
 const (
 	ProtocGenGrpcGatewayOwner   = "grpc-ecosystem"
 	ProtocGenGrpcGatewayRepo    = "grpc-gateway"
-	ProtocGenGrpcGatewayUrlBase = "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway"
+	ProtocGenGrpcGatewayUrlBase = "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway"
 )
 
 // Install protoc-gen-grpc-gateway on target hosts

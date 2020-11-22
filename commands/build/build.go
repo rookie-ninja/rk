@@ -25,9 +25,6 @@ func Build() *cli.Command {
 				Destination: &BuildInfo.Debug,
 			},
 		},
-		Subcommands: []*cli.Command{
-			BuildGoCommand(),
-		},
 	}
 
 	return command
