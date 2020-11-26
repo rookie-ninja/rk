@@ -6,8 +6,12 @@ package main
 
 import (
 	"github.com/rookie-ninja/rk/commands/build"
+	rk_clear "github.com/rookie-ninja/rk/commands/clear"
+	rk_docker "github.com/rookie-ninja/rk/commands/docker"
 	"github.com/rookie-ninja/rk/commands/gen"
 	"github.com/rookie-ninja/rk/commands/install"
+	rk_pack "github.com/rookie-ninja/rk/commands/pack"
+	rk_run "github.com/rookie-ninja/rk/commands/run"
 	"github.com/rookie-ninja/rk/commands/test"
 	"github.com/rookie-ninja/rk/commands/uninstall"
 	"github.com/urfave/cli/v2"
@@ -27,6 +31,10 @@ func main() {
 			rk_test.Test(),
 			rk_build.Build(),
 			rk_uninstall.Uninstall(),
+			rk_clear.Clear(),
+			rk_pack.Pack(),
+			rk_docker.Docker(),
+			rk_run.Run(),
 		},
 	}
 
