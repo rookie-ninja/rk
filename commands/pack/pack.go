@@ -66,7 +66,7 @@ func PackAction(ctx *cli.Context) error {
 		config.Pack.Name = config.Pack.Name + ".tar.gz"
 	}
 
-	color.Cyan("packing target folder")
+	color.Cyan("[Action] packing target folder")
 	bytes, err := exec.Command("tar", "-cvzf", config.Pack.Name, "target").CombinedOutput()
 	if err != nil {
 		rk_common.ClearTargetFolder("target", event)

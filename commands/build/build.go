@@ -46,7 +46,7 @@ func BuildAction(ctx *cli.Context) error {
 
 // a helper function
 func DoBuildGo(config *rk_common.BootConfig, event rk_query.Event) error {
-	color.Cyan("[1] marshaling boot.yaml")
+	color.Cyan("[Action] marshaling boot.yaml")
 	if err := rk_common.MarshalBuildConfig("build.yaml", config, event); err != nil {
 		event.AddPair("marshal-config", "fail")
 		return rk_common.Error(event, err)

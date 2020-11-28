@@ -27,7 +27,7 @@ func ClearAction(ctx *cli.Context) error {
 	event := rk_common.GetEvent("clear")
 
 	// 1: removing target folder
-	color.Cyan("[1] clearing...")
+	color.Cyan("[Action] clearing...")
 	// just try our best to remove it
 	if err := os.RemoveAll("target"); err != nil {
 		color.Red(err.Error())
