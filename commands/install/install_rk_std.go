@@ -25,7 +25,7 @@ func InstallRkStdCommand() *cli.Command {
 
 func InstallRkStdAction(ctx *cli.Context) error {
 	// install protobuf
-	color.Magenta("[1] Install protobuf")
+	color.Magenta("[Action] install protobuf")
 	if err := InstallProtobufAction(ctx); err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	color.White(EOE)
 
 	// install protoc-gen-go
-	color.Magenta("[2] Install protoc-gen-go")
+	color.Magenta("[Action] install protoc-gen-go")
 	if err := InstallProtocGenGoAction(ctx); err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	color.White(EOE)
 
 	// install protoc-gen-grpc-gateway
-	color.Magenta("[3] Install protoc-gen-grpc-gateway")
+	color.Magenta("[Action] install protoc-gen-grpc-gateway")
 	if err := InstallProtocGenGrpcGatewayAction(ctx); err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	color.White(EOE)
 
 	// install protoc-gen-doc
-	color.Magenta("[4] Install protoc-gen-doc")
+	color.Magenta("[Action] install protoc-gen-doc")
 	if err := InstallProtocGenDocAction(ctx); err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	color.White(EOE)
 
 	// install protoc-gen-swagger
-	color.Magenta("[5] Install protoc-gen-swagger")
+	color.Magenta("[Action] install protoc-gen-swagger")
 	if err := InstallProtocGenSwaggerAction(ctx); err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	color.White(EOE)
 
 	// install mockgen
-	color.Magenta("[6] Install mockgen")
+	color.Magenta("[Action] install mockgen")
 	if err := InstallMockGenAction(ctx); err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	color.White(EOE)
 
 	// install golangci-lint
-	color.Magenta("[7] Install golangci-lint")
+	color.Magenta("[Action] install golangci-lint")
 	if err := InstallGoLangCILintAction(ctx); err != nil {
 		return err
 	}
@@ -81,14 +81,15 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	color.White(EOE)
 
 	// install gocov
-	color.Magenta("[8] Install gocov")
+	color.Magenta("[Action] install gocov")
 	if err := InstallGoCovAction(ctx); err != nil {
 		return err
 	}
 	color.Magenta("[success]")
 	color.White(EOE)
 
-	color.Magenta("[9] Install golint")
+	// install golint
+	color.Magenta("[Action] install golint")
 	if err := InstallGoLintAction(ctx); err != nil {
 		return err
 	}
@@ -96,7 +97,7 @@ func InstallRkStdAction(ctx *cli.Context) error {
 	color.White(EOE)
 
 	// install swag
-	color.Magenta("[10] Install swag")
+	color.Magenta("[Action] install swag")
 	if err := InstallSwagAction(ctx); err != nil {
 		return err
 	}

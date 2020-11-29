@@ -79,7 +79,7 @@ func InstallGoLangCILintAction(ctx *cli.Context) error {
 	Success()
 
 	// 3: install release
-	color.Cyan("Install golangci-lint in %s to %s", releaseCtx.LocalFilePath, UserLocalBin)
+	color.Cyan("install golangci-lint in %s to %s", releaseCtx.LocalFilePath, UserLocalBin)
 	releaseCtx.ExtractType = "tar"
 	releaseCtx.ExtractArg = "--strip-components=1"
 	releaseCtx.ExtractPath = "golangci-lint"

@@ -86,7 +86,7 @@ func InstallProtocGenDocAction(ctx *cli.Context) error {
 	Success()
 
 	// 3: install release
-	color.Cyan("Install protoc-gen-go in %s to %s", releaseCtx.LocalFilePath, UserLocalBin)
+	color.Cyan("install protoc-gen-go in %s to %s", releaseCtx.LocalFilePath, UserLocalBin)
 	releaseCtx.ExtractType = "tar"
 	releaseCtx.ExtractPath = "protoc-gen-doc"
 	releaseCtx.ExtractArg = "--strip-components=1"

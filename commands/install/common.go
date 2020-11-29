@@ -300,7 +300,7 @@ func ExtractToDest(ctx *GithubReleaseContext, event rk_query.Event) error {
 }
 
 func GoGetFromGithub(repo, url, release string, event rk_query.Event) error {
-	color.Cyan("Install %s@%s", repo, release)
+	color.Cyan("[Action] install %s@%s", repo, release)
 	event.AddPair("repo", repo)
 	event.AddPair("url", url)
 	event.AddPair("releases", release)
@@ -324,7 +324,7 @@ func GoGetFromGithub(repo, url, release string, event rk_query.Event) error {
 }
 
 func ValidateInstallation(command *exec.Cmd, event rk_query.Event) error {
-	color.Cyan("Validate installation")
+	color.Cyan("[Action] validate installation")
 	bytes, err := command.CombinedOutput()
 	if err != nil {
 		return Error(event,

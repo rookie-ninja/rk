@@ -86,7 +86,7 @@ func InstallProtobufAction(ctx *cli.Context) error {
 	Success()
 
 	// 3: install release
-	color.Cyan("Install protoc in %s to %s", releaseCtx.LocalFilePath, UserLocalBin)
+	color.Cyan("install protoc in %s to %s", releaseCtx.LocalFilePath, UserLocalBin)
 	releaseCtx.ExtractType = "zip"
 	releaseCtx.ExtractPath = "bin/protoc"
 	if err = ExtractToDest(releaseCtx, event); err != nil {
