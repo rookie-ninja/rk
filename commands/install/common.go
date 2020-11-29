@@ -280,7 +280,9 @@ func ExtractToDest(ctx *GithubReleaseContext, event rk_query.Event) error {
 	color.White("extract %s to %s success", ctx.LocalFilePath, ctx.TempPath)
 
 	// copy to target folder
-	bytes, err = exec.Command("/bin/sh", "-c", fmt.Sprintf("cp -r %s %s", path.Join(ctx.TempPath, ctx.ExtractPath), ctx.DestPath)).CombinedOutput()
+	// chmod to protoc
+	bytes, err = exec.Command("/bin/sh", "-c", fmt.Sprintf("chmod -R +rx %s", path.Join(ctx.TempPath, ctx.ExtractPath))).CombinedOutput()
+	bytes, err = exec.Command("/bin/sh", "-c", fmt.Sprintf("sudo cp -r %s %s", path.Join(ctx.TempPath, ctx.ExtractPath), ctx.DestPath)).CombinedOutput()
 
 	if err != nil {
 		return Error(event,
