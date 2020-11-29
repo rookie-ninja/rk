@@ -30,7 +30,7 @@ rk lets you:
 
 ## Installation
 ```shell script
-go install github.com/rookie-ninja/rk
+go get -u github.com/rookie-ninja/rk
 ```
 
 ## Quick Start
