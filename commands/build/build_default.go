@@ -5,7 +5,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 )
 
-func BuildDefault(config *rk_common.BootConfig, event rk_query.Event) error {
+func BuildDefault(config *rk_common.BootConfig, event rkquery.Event) error {
 	event.AddPair("type", "default")
 	// 1: run command before
 	if err := runUserCommand(config.Build.Commands.Before, "before", event); err != nil {

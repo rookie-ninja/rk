@@ -5,39 +5,27 @@
 package rk_uninstall
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-// Install protoc-gen-swagger on target hosts
-func UninstallProtocGenSwaggerCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "protoc-gen-swagger",
-		Usage:     "uninstall protoc-gen-swagger on local machine",
-		UsageText: "rk uninstall protoc-gen-swagger",
-		Action:    UninstallProtocGenSwaggerAction,
-	}
+func uninstallProtocGenOpenApiV2() *cli.Command {
+	command := commandDefault("protoc-gen-openapiv2")
+	command.Before = beforeDefault
+	command.Action = protocGenOpenApiV2Action
+	command.After = afterDefault
 
 	return command
 }
 
-func UninstallProtocGenSwaggerAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-protoc-gen-swagger")
-	defer rk_common.Finish(event, nil)
+func protocGenOpenApiV2Action(ctx *cli.Context) error {
+	UninstallInfo.app = "protoc-gen-openapiv2"
 
-	// check path
-	path := CheckPath("protoc-gen-swagger", event)
+	chain := rk_common.NewActionChain()
+	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
+	chain.Add("Validate uninstallation", validateUninstallation, false)
+	err := chain.Execute(ctx)
 
-	if len(path) < 1 {
-		Success()
-		return nil
-	}
-
-	// uninstall release
-	color.Cyan("Uninstall protoc-gen-swagger at %s", path)
-	exec.Command("rm", path).CombinedOutput()
-	Success()
-	return nil
+	return err
 }

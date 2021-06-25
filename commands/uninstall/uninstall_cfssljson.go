@@ -5,39 +5,27 @@
 package rk_uninstall
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-// Install cfssljson on target hosts
-func UninstallCfsslJsonCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "cfssljson",
-		Usage:     "uninstall cfssljson on local machine",
-		UsageText: "rk uninstall cfssljson",
-		Action:    UninstallCfsslJsonAction,
-	}
+func uninstallCfsslJson() *cli.Command {
+	command := commandDefault("cfssljson")
+	command.Before = beforeDefault
+	command.Action = cfsslJsonAction
+	command.After = afterDefault
 
 	return command
 }
 
-func UninstallCfsslJsonAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-cfssljson")
-	defer rk_common.Finish(event, nil)
+func cfsslJsonAction(ctx *cli.Context) error {
+	UninstallInfo.app = "cfssljson"
 
-	// check path
-	path := CheckPath("cfssljson", event)
+	chain := rk_common.NewActionChain()
+	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
+	chain.Add("Validate uninstallation", validateUninstallation, false)
+	err := chain.Execute(ctx)
 
-	if len(path) < 1 {
-		Success()
-		return nil
-	}
-
-	// uninstall release
-	color.Cyan("Uninstall cfssljson at %s", path)
-	exec.Command("rm", path).CombinedOutput()
-	Success()
-	return nil
+	return err
 }

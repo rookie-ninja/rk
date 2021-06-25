@@ -7,16 +7,19 @@ package rk_common
 import (
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/google/uuid"
 	"github.com/rookie-ninja/rk-logger"
 	"github.com/rookie-ninja/rk-query"
+	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
 	"time"
+)
+
+const (
+	EventKey = "rkEvent"
 )
 
 var (
@@ -50,7 +53,7 @@ var (
    }`
 
 	logger  *zap.Logger
-	factory *rk_query.EventFactory
+	factory *rkquery.EventFactory
 )
 
 type BootConfig struct {
@@ -86,51 +89,83 @@ type BootConfig struct {
 }
 
 func init() {
-	userHomeDir, _ := os.UserHomeDir()
-	rkDir := path.Join(userHomeDir, ".rk/logs")
-	os.MkdirAll(rkDir, os.ModePerm)
+	//userHomeDir, _ := os.UserHomeDir()
+	//rkDir := path.Join(userHomeDir, ".rk/logs")
+	//os.MkdirAll(rkDir, os.ModePerm)
+	//
+	//bytes := []byte(fmt.Sprintf(confStr, path.Join(rkDir, "query.log")))
 
-	bytes := []byte(fmt.Sprintf(confStr, path.Join(rkDir, "query.log")))
-
-	logger, _, _ = rk_logger.NewZapLoggerWithBytes(bytes, rk_logger.JSON)
-	factory = rk_query.NewEventFactory(
-		rk_query.WithAppName("rk-cmd"),
-		rk_query.WithLogger(logger))
+	bytes := []byte(fmt.Sprintf(confStr, "stdout"))
+	logger, _, _ = rklogger.NewZapLoggerWithBytes(bytes, rklogger.JSON)
+	factory = rkquery.NewEventFactory(
+		rkquery.WithAppName("rk-cmd"),
+		rkquery.WithZapLogger(logger))
 }
 
-func GetEvent(op string) rk_query.Event {
+func GetEvent(op string) rkquery.Event {
 	event := factory.CreateEvent()
 	event.SetOperation(op)
 	event.SetStartTime(time.Now())
 	return event
 }
 
-func Finish(event rk_query.Event, err error) {
+func GetEventV2(ctx *cli.Context) rkquery.Event {
+	if v := ctx.Context.Value(EventKey); v != nil {
+		if event, ok := v.(rkquery.Event); ok {
+			return event
+		}
+	}
+
+	return factory.CreateEventNoop()
+}
+
+func CreateEvent(op string) rkquery.Event {
+	event := factory.CreateEvent()
+	event.SetOperation(op)
+	event.SetStartTime(time.Now())
+	return event
+}
+
+func Finish(event rkquery.Event, err error) {
 	if err != nil {
 		event.AddErr(err)
 		event.SetResCode("Failed")
-	} else {
-		event.SetResCode("Success")
+	} else if len(event.GetResCode()) < 1 {
+		event.SetResCode("OK")
 	}
 
-	event.SetEventId(uuid.New().String())
 	event.SetEndTime(time.Now())
-	event.WriteLog()
+	event.Finish()
 }
 
 func Success() {
-	color.Green("[success]")
+	color.Green("✅ [success]")
 	color.White("--------------------------------")
 }
 
-func Error(event rk_query.Event, err error) error {
-	color.Red(err.Error())
+func Error(event rkquery.Event, err error) error {
+	if err != nil {
+		color.Red("[Error] %s", err.Error())
+	} else {
+		color.Red("[Error] internal error occur")
+	}
+
 	Finish(event, err)
 	return err
 }
 
+func ErrorV2(err error) error {
+	if err != nil {
+		color.Red("[Error] %s", err.Error())
+	} else {
+		color.Red("[Error] internal error occur")
+	}
+
+	return err
+}
+
 // marshal to file to struct
-func MarshalBuildConfig(path string, dest interface{}, event rk_query.Event) error {
+func MarshalBuildConfig(path string, dest interface{}, event rkquery.Event) error {
 	// 1: read file first
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -148,7 +183,7 @@ func MarshalBuildConfig(path string, dest interface{}, event rk_query.Event) err
 }
 
 // clear folder
-func ClearTargetFolder(path string, event rk_query.Event) {
+func ClearTargetFolder(path string, event rkquery.Event) {
 	// just try our best to remove it
 	if err := os.RemoveAll(path); err != nil {
 		color.Red(err.Error())
@@ -159,7 +194,7 @@ func ClearTargetFolder(path string, event rk_query.Event) {
 }
 
 // validate go installation
-func ValidateCommand(command string, event rk_query.Event) error {
+func ValidateCommand(command string, event rkquery.Event) error {
 	bytes, err := exec.Command("which", command).CombinedOutput()
 	if err != nil {
 		return Error(event,

@@ -31,7 +31,7 @@ func init() {
 }
 
 // run user commands
-func runUserCommand(commands []string, pos string, event rk_query.Event) error {
+func runUserCommand(commands []string, pos string, event rkquery.Event) error {
 	if len(commands) < 1 {
 		color.Yellow("no user command")
 		return nil
@@ -45,7 +45,7 @@ func runUserCommand(commands []string, pos string, event rk_query.Event) error {
 			continue
 		}
 		color.Yellow(fmt.Sprintf("command-%s-%d:[%s]", pos, i, cmd))
-		event.AddFields(zap.Strings(fmt.Sprintf("cmd-%s-%d", pos, i), tokens))
+		event.AddPayloads(zap.Strings(fmt.Sprintf("cmd-%s-%d", pos, i), tokens))
 
 		if len(tokens) > 1 {
 			bytes, err := exec.Command(tokens[0], tokens[1:]...).CombinedOutput()
@@ -74,13 +74,13 @@ func runUserCommand(commands []string, pos string, event rk_query.Event) error {
 }
 
 // run user scripts
-func runUserScripts(scripts []string, pos string, event rk_query.Event) error {
+func runUserScripts(scripts []string, pos string, event rkquery.Event) error {
 	if len(scripts) < 1 {
 		color.Yellow("no user script")
 		return nil
 	}
 
-	event.AddFields(zap.Strings("scripts", scripts))
+	event.AddPayloads(zap.Strings("scripts", scripts))
 
 	for i := range scripts {
 		script := scripts[i]
@@ -106,7 +106,7 @@ func runUserScripts(scripts []string, pos string, event rk_query.Event) error {
 }
 
 // run swag for swagger documentation
-func runSwagCommand(config *rk_common.BootConfig, event rk_query.Event) {
+func runSwagCommand(config *rk_common.BootConfig, event rkquery.Event) {
 	if len(config.Build.Main) < 1 {
 		// Main function path is empty, let's assuming main function located at
 		// current directory
@@ -132,7 +132,7 @@ func runSwagCommand(config *rk_common.BootConfig, event rk_query.Event) {
 }
 
 // run go build command
-func compileGoFile(config *rk_common.BootConfig, event rk_query.Event) error {
+func compileGoFile(config *rk_common.BootConfig, event rkquery.Event) error {
 	// 1: create directory named as target and sub folders
 	for i := range targetFolders {
 		if err := os.MkdirAll(targetFolders[i], os.ModePerm); err != nil {
@@ -206,13 +206,13 @@ func compileGoFile(config *rk_common.BootConfig, event rk_query.Event) error {
 }
 
 // copy user specified folder to target folder
-func copyUserFolder(config *rk_common.BootConfig, event rk_query.Event) error {
+func copyUserFolder(config *rk_common.BootConfig, event rkquery.Event) error {
 	if len(config.Build.Copy) < 1 {
 		color.Yellow("no folders or files need to copy, skip")
 		return nil
 	}
 
-	event.AddFields(zap.Strings("copy", config.Build.Copy))
+	event.AddPayloads(zap.Strings("copy", config.Build.Copy))
 
 	for i := range config.Build.Copy {
 		if len(config.Build.Copy[i]) < 1 {
@@ -234,7 +234,7 @@ func copyUserFolder(config *rk_common.BootConfig, event rk_query.Event) error {
 }
 
 // helper function for cp command
-func copyFolder(src string, dst string, event rk_query.Event) error {
+func copyFolder(src string, dst string, event rkquery.Event) error {
 	// validate existence of src folder
 	if _, err := os.Stat(src); err != nil {
 		return err

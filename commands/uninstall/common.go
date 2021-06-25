@@ -5,59 +5,60 @@
 package rk_uninstall
 
 import (
+	"context"
+	"fmt"
 	"github.com/fatih/color"
-	"github.com/google/go-github/v32/github"
-	"github.com/rookie-ninja/rk-query"
-	"os"
+	"github.com/rookie-ninja/rk/common"
+	"github.com/urfave/cli/v2"
 	"os/exec"
-	"path"
 	"strings"
 )
 
-const (
-	UserLocalBin     = "/usr/local/bin"
-	UserLocalInclude = "/usr/local/include"
-)
+var UninstallInfo = uninstallInfo{}
 
-var (
-	GithubClient = github.NewClient(nil)
-	RkHomeDir    = "./"
-)
-
-type URLFilter func(string) bool
-
-type GithubReleaseContext struct {
-	Release       *github.RepositoryRelease
-	Repo          string
-	Owner         string
-	Filter        func(string) bool
-	RemoteURL     string
-	LocalFilePath string
-	ExtractPath   string
-	ExtractType   string
-	ExtractArg    string
-	TempPath      string
-	DestPath      string
-	AssetSize     int64
+type uninstallInfo struct {
+	app string
 }
 
-func init() {
-	userHomeDir, _ := os.UserHomeDir()
-	RkHomeDir = path.Join(userHomeDir, ".rk")
-	os.MkdirAll(RkHomeDir, os.ModePerm)
+func commandDefault(name string) *cli.Command {
+	return &cli.Command{
+		Name:      name,
+		Usage:     fmt.Sprintf("uninstall %s from local machine", name),
+		UsageText: fmt.Sprintf("rk uninstall %s", name),
+	}
 }
 
-func Success() {
-	color.Green("[success]")
-	color.White("--------------------------------")
+func beforeDefault(ctx *cli.Context) error {
+	name := strings.Join(strings.Split(ctx.Command.FullName(), " "), "/")
+	event := rk_common.CreateEvent(name)
+
+	// Inject event into context
+	ctx.Context = context.WithValue(ctx.Context, rk_common.EventKey, event)
+
+	return nil
 }
 
-func CheckPath(app string, event rk_query.Event) string {
-	bytes, _ := exec.Command("which", app).CombinedOutput()
+func afterDefault(ctx *cli.Context) error {
+	rk_common.Finish(rk_common.GetEventV2(ctx), nil)
+	return nil
+}
+
+func checkPath(ctx *cli.Context) error {
+	bytes, err := exec.Command("which", UninstallInfo.app).CombinedOutput()
+	if err != nil {
+		return err
+	}
 
 	path := strings.TrimSuffix(string(bytes), "\n")
 
-	color.Cyan("Check %s path:%s", app, path)
-	event.AddPair("path", path)
-	return path
+	color.White(fmt.Sprintf("- uninstall %s at path:%s", UninstallInfo.app, path))
+	rk_common.GetEventV2(ctx).AddPair("path", path)
+	return nil
+}
+
+func validateUninstallation(ctx *cli.Context) error {
+	bytes, _ := exec.Command("which", UninstallInfo.app).CombinedOutput()
+
+	color.White(string(bytes))
+	return nil
 }

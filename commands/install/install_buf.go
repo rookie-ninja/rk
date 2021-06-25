@@ -1,7 +1,3 @@
-// Copyright (c) 2020 rookie-ninja
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file.
 package rk_install
 
 import (
@@ -12,50 +8,49 @@ import (
 	"strings"
 )
 
-func installProtobuf() *cli.Command {
-	command := commandDefault("protobuf")
+// Install on local machine
+func installBuf() *cli.Command {
+	command := commandDefault("buf")
 	command.Before = beforeDefault
-	command.Action = protobufAction
+	command.Action = bufAction
 	command.After = afterDefault
 
 	return command
 }
 
-func protobufAction(ctx *cli.Context) error {
-	GithubInfo.Owner = "protocolbuffers"
-	GithubInfo.Repo = "protobuf"
-	GithubInfo.DecompressType = "zip"
+func bufAction(ctx *cli.Context) error {
+	GithubInfo.Owner = "bufbuild"
+	GithubInfo.Repo = "buf"
+	GithubInfo.DecompressType = "tar"
 	GithubInfo.DecompressedFilesToCopy = []string{
-		"bin/protoc",
-		"include/*",
+		"buf/bin/*",
 	}
 	GithubInfo.DecompressedFilesDestination = []string{
 		UserLocalBin,
-		UserLocalInclude,
 	}
-	GithubInfo.ValidationCmd = exec.Command("protoc", "--version")
-	GithubInfo.DownloadFilter = func(url string) bool {
-		var sysArch string
-		if runtime.GOOS == "darwin" {
-			sysArch = "osx-x86_64"
-		} else if runtime.GOOS == "win" {
-			sysArch = "win64"
-		} else {
-			sysArch = "linux-x86_64"
-		}
-
-		if strings.Contains(url, sysArch) {
-			return true
-		}
-
-		return false
-	}
+	GithubInfo.ValidationCmd = exec.Command("buf", "--version")
 
 	// List tags only
 	if hasListFlag(ctx) {
 		chain := rk_common.NewActionChain()
 		chain.Add("List tags from github", printTagsFromGithub, false)
 		return chain.Execute(ctx)
+	}
+
+	GithubInfo.DownloadFilter = func(url string) bool {
+		var sysArch string
+		if runtime.GOOS == "darwin" {
+			sysArch = "Darwin-x86_64.tar.gz"
+		} else if runtime.GOOS == "win" {
+			sysArch = ""
+		} else {
+			sysArch = "Linux-x86_64.tar.gz"
+		}
+		if strings.Contains(url, sysArch) {
+			return true
+		}
+
+		return false
 	}
 
 	chain := rk_common.NewActionChain()

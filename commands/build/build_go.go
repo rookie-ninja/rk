@@ -34,9 +34,9 @@ func BuildGo(config *rk_common.BootConfig, event rk_query.Event) error {
 	rk_common.Success()
 
 	// 5: run swag command
-	color.Cyan("[Action] run swag for swagger document")
-	runSwagCommand(config, event)
-	rk_common.Success()
+	//color.Cyan("[Action] run swag for swagger document")
+	//runSwagCommand(config, event)
+	//rk_common.Success()
 
 	// 6: build go file and move them to target folder
 	color.Cyan("[Action] build go file")

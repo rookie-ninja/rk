@@ -5,39 +5,27 @@
 package rk_uninstall
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-// Install golint on target hosts
-func UninstallGoLintCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "golint",
-		Usage:     "uninstall golint on local machine",
-		UsageText: "rk uninstall golint",
-		Action:    UninstallGoLintAction,
-	}
+func uninstallGolint() *cli.Command {
+	command := commandDefault("golint")
+	command.Before = beforeDefault
+	command.Action = golintAction
+	command.After = afterDefault
 
 	return command
 }
 
-func UninstallGoLintAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-golint")
-	defer rk_common.Finish(event, nil)
+func golintAction(ctx *cli.Context) error {
+	UninstallInfo.app = "golint"
 
-	// check path
-	path := CheckPath("golint", event)
+	chain := rk_common.NewActionChain()
+	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
+	chain.Add("Validate uninstallation", validateUninstallation, false)
+	err := chain.Execute(ctx)
 
-	if len(path) < 1 {
-		Success()
-		return nil
-	}
-
-	// uninstall release
-	color.Cyan("Uninstall golint at %s", path)
-	exec.Command("rm", path).CombinedOutput()
-	Success()
-	return nil
+	return err
 }

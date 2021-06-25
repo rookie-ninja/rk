@@ -5,39 +5,27 @@
 package rk_uninstall
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-// Install cfssl on target hosts
-func UninstallCfsslCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "cfssl",
-		Usage:     "uninstall cfssl on local machine",
-		UsageText: "rk uninstall cfssl",
-		Action:    UninstallCfsslAction,
-	}
+func uninstallCfssl() *cli.Command {
+	command := commandDefault("cfssl")
+	command.Before = beforeDefault
+	command.Action = cfsslAction
+	command.After = afterDefault
 
 	return command
 }
 
-func UninstallCfsslAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-cfssl")
-	defer rk_common.Finish(event, nil)
+func cfsslAction(ctx *cli.Context) error {
+	UninstallInfo.app = "cfssl"
 
-	// check path
-	path := CheckPath("cfssl", event)
+	chain := rk_common.NewActionChain()
+	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
+	chain.Add("Validate uninstallation", validateUninstallation, false)
+	err := chain.Execute(ctx)
 
-	if len(path) < 1 {
-		Success()
-		return nil
-	}
-
-	// uninstall release
-	color.Cyan("Uninstall cfssl at %s", path)
-	exec.Command("rm", path).CombinedOutput()
-	Success()
-	return nil
+	return err
 }

@@ -10,56 +10,37 @@ import (
 	"os/exec"
 )
 
-const (
-	ProtocGenGoOwner   = "golang"
-	ProtocGenGoRepo    = "protobuf"
-	ProtocGenGoUrlBase = "github.com/golang/protobuf/protoc-gen-go"
-)
-
-// Install protoc-gen-go on target hosts
-func InstallProtocGenGoCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "protoc-gen-go",
-		Usage:     "install protoc-gen-go on local machine",
-		UsageText: "rk install protoc-gen-go -r [release]",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "release, r",
-				Aliases:     []string{"r"},
-				Destination: &InstallInfo.Release,
-				Required:    false,
-				Usage:       "protoc-gen-go release",
-			},
-			&cli.BoolFlag{
-				Name:        "list, l",
-				Aliases:     []string{"l"},
-				Destination: &InstallInfo.ListReleases,
-				Usage:       "list protoc-gen-go releases, list most recent 10 releases",
-			},
-		},
-		Action: InstallProtocGenGoAction,
-	}
+// Install on local machine
+func installProtocGenGo() *cli.Command {
+	command := commandDefault("protoc-gen-go")
+	command.Before = beforeDefault
+	command.Action = protocGenGoAction
+	command.After = afterDefault
 
 	return command
 }
 
-func InstallProtocGenGoAction(ctx *cli.Context) error {
-	if InstallInfo.ListReleases {
-		event := rk_common.GetEvent("list-protoc-gen-go-release")
-		return PrintReleasesFromGithub(ProtocGenGoOwner, ProtocGenGoRepo, event)
+func protocGenGoAction(ctx *cli.Context) error {
+	GithubInfo.Owner = "golang"
+	GithubInfo.Repo = "protobuf"
+	GithubInfo.GoGetUrl = "github.com/golang/protobuf/protoc-gen-go"
+	GithubInfo.ValidationCmd = exec.Command("which", "protoc-gen-go")
+
+	// List tags only
+	if hasListFlag(ctx) {
+		chain := rk_common.NewActionChain()
+		chain.Add("List tags from github", printTagsFromGithub, false)
+		return chain.Execute(ctx)
 	}
 
-	event := rk_common.GetEvent("install-protoc-gen-go")
-	// go get package
-	if err := GoGetFromGithub(ProtocGenGoRepo, ProtocGenGoUrlBase, InstallInfo.Release, event); err != nil {
-		return err
-	}
-	Success()
+	chain := rk_common.NewActionChain()
+	chain.Add("Go get from remote repo", goGetFromRemoteUrl, false)
+	chain.Add("Validate installation", validateInstallation, false)
+	err := chain.Execute(ctx)
 
-	if err := ValidateInstallation(exec.Command("which", "protoc-gen-go"), event); err != nil {
-		return err
-	}
+	// Log to event
+	event := rk_common.GetEventV2(ctx)
+	event.AddPayloads(githubInfoToPayloads()...)
 
-	rk_common.Finish(event, nil)
-	return nil
+	return err
 }

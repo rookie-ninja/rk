@@ -1,7 +1,3 @@
-// Copyright (c) 2020 rookie-ninja
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file.
 package rk_uninstall
 
 import (
@@ -10,17 +6,17 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func uninstallProtocGenDoc() *cli.Command {
-	command := commandDefault("protoc-gen-doc")
+func uninstallPkger() *cli.Command {
+	command := commandDefault("pkger")
 	command.Before = beforeDefault
-	command.Action = protocGenDocAction
+	command.Action = pkgerAction
 	command.After = afterDefault
 
 	return command
 }
 
-func protocGenDocAction(ctx *cli.Context) error {
-	UninstallInfo.app = "protoc-gen-doc"
+func pkgerAction(ctx *cli.Context) error {
+	UninstallInfo.app = "pkger"
 
 	chain := rk_common.NewActionChain()
 	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)

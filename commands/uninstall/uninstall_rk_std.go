@@ -9,8 +9,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const EOE = "------------------------------------------------------------------"
-
 // Uninstall rk-std on target hosts
 func UninstallRkStdCommand() *cli.Command {
 	command := &cli.Command{
@@ -24,85 +22,62 @@ func UninstallRkStdCommand() *cli.Command {
 }
 
 func UninstallRkStdAction(ctx *cli.Context) error {
-	// uninstall protobuf
-	color.Magenta("[1] Uninstall protobuf")
-	if err := UninstallProtobufAction(ctx); err != nil {
+	color.Magenta("Uninstall rk style standard commands...")
+
+	// install protobuf
+	color.Magenta("Uninstall protobuf")
+	if err := protobufAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[success]")
-	color.White(EOE)
 
-	// uninstall protoc-gen-go
-	color.Magenta("[2] Uninstall protoc-gen-go")
-	if err := UninstallProtocGenGoAction(ctx); err != nil {
+	// install protoc-gen-go
+	color.Magenta("Uninstall protoc-gen-go")
+	if err := protocGenGoAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[success]")
-	color.White(EOE)
 
-	// uninstall protoc-gen-grpc-gateway
-	color.Magenta("[3] Uninstall protoc-gen-grpc-gateway")
-	if err := UninstallProtocGenGrpcGatewayAction(ctx); err != nil {
+	// install protoc-gen-grpc-gateway
+	color.Magenta("Uninstall protoc-gen-grpc-gateway")
+	if err := protocGenGrpcGatewayAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[success]")
-	color.White(EOE)
 
-	// uninstall protoc-gen-doc
-	color.Magenta("[4] Uninstall protoc-gen-doc")
-	if err := UninstallProtocGenDocAction(ctx); err != nil {
+	// install protoc-gen-doc
+	color.Magenta("Uninstall protoc-gen-doc")
+	if err := protocGenDocAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[success]")
-	color.White(EOE)
 
-	// uninstall protoc-gen-swagger
-	color.Magenta("[5] Uninstall protoc-gen-swagger")
-	if err := UninstallProtocGenSwaggerAction(ctx); err != nil {
+	// install protoc-gen-openapiv2
+	color.Magenta("Uninstall protoc-gen-openapiv2")
+	if err := protocGenOpenApiV2Action(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[success]")
-	color.White(EOE)
 
-	// uninstall mockgen
-	color.Magenta("[6] Uninstall mockgen")
-	if err := UninstallMockGenAction(ctx); err != nil {
+	// install golangci-lint
+	color.Magenta("Uninstall golangci-lint")
+	if err := golangCiLintAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[success]")
-	color.White(EOE)
 
-	// uninstall golangci-lint
-	color.Magenta("[7] Uninstall golangci-lint")
-	if err := UninstallGoLangCILintAction(ctx); err != nil {
+	// install gocov
+	color.Magenta("Uninstall gocov")
+	if err := goCovAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[success]")
-	color.White(EOE)
 
-	// uninstall gocov
-	color.Magenta("[8] Uninstall gocov")
-	if err := UninstallGoCovAction(ctx); err != nil {
+	// install swag
+	color.Magenta("Uninstall swag")
+	if err := swagAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[success]")
-	color.White(EOE)
 
-	// uninstall golint
-	color.Magenta("[9] Uninstall golint")
-	if err := UninstallGoLintAction(ctx); err != nil {
+	// install buf
+	color.Magenta("Uninstall buf")
+	if err := bufAction(ctx); err != nil {
 		return err
 	}
-	color.Magenta("[success]")
-	color.White(EOE)
 
-	// uninstall swag
-	color.Magenta("[10] Uninstall swag")
-	if err := UninstallSwagAction(ctx); err != nil {
-		return err
-	}
-	color.Magenta("[success]")
-	color.White(EOE)
-
+	color.Magenta("[OK]")
 	return nil
 }

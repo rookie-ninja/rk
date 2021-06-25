@@ -13,37 +13,30 @@ func Install() *cli.Command {
 		UsageText: "rk install [third-party software]",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:        "debug",
-				Aliases:     []string{"d"},
-				Usage:       "debug mod",
-				Destination: &InstallInfo.Debug,
+				Name:    "debug",
+				Aliases: []string{"d"},
+				Usage:   "debug mode",
 			},
 		},
 
 		Subcommands: []*cli.Command{
-			InstallProtobufCommand(),
-			InstallProtocGenGoCommand(),
-			InstallProtocGenGrpcGatewayCommand(),
-			InstallProtocGenSwaggerCommand(),
-			InstallProtocGenDocCommand(),
-			InstallGoLintCommand(),
-			InstallGoLangCILintCommand(),
-			InstallGoCovCommand(),
-			InstallMockGenCommand(),
-			InstallSwagCommand(),
-			InstallRkStdCommand(),
-			InstallCfsslCommand(),
-			InstallCfsslJsonCommand(),
+			installProtobuf(),
+			installProtocGenGo(),
+			installProtocGenGrpcGateway(),
+			installProtocGenOpenApiV2(),
+			installProtocGenDoc(),
+			installBuf(),
+			installGolangCiLint(),
+			installGoCov(),
+			installMockGen(),
+			installSwag(),
+			installCfssl(),
+			installCfsslJson(),
+			installPkger(),
+			installGolint(),
+			rkStdCommand(),
 		},
 	}
 
 	return command
 }
-
-type installInfo struct {
-	Debug        bool
-	ListReleases bool
-	Release      string
-}
-
-var InstallInfo = installInfo{}

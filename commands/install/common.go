@@ -6,13 +6,14 @@ package rk_install
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/google/go-github/v32/github"
-	"github.com/rookie-ninja/rk-query"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/schollz/progressbar/v3"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"os"
@@ -31,24 +32,11 @@ const (
 var (
 	GithubClient = github.NewClient(nil)
 	RkHomeDir    = "./"
+	GithubInfo   = githubInfo{
+		DecompressedFilesToCopy:      make([]string, 0),
+		DecompressedFilesDestination: make([]string, 0),
+	}
 )
-
-type URLFilter func(string) bool
-
-type GithubReleaseContext struct {
-	Release       *github.RepositoryRelease
-	Repo          string
-	Owner         string
-	Filter        func(string) bool
-	RemoteURL     string
-	LocalFilePath string
-	ExtractPath   string
-	ExtractType   string
-	ExtractArg    string
-	TempPath      string
-	DestPath      string
-	AssetSize     int64
-}
 
 func init() {
 	userHomeDir, _ := os.UserHomeDir()
@@ -56,327 +44,307 @@ func init() {
 	os.MkdirAll(RkHomeDir, os.ModePerm)
 }
 
-func Success() {
-	color.Green("[success]")
-	color.White("--------------------------------")
+type githubInfo struct {
+	Owner                        string                      `json:"owner"`
+	Repo                         string                      `json:"repo"`
+	GoGetUrl                     string                      `json:"-"`
+	ReleaseListFromGithub        []*github.RepositoryRelease `json:"-"`
+	ReleaseToDownload            *github.RepositoryRelease   `json:"-"`
+	DownloadUrl                  string                      `json:"downloadUrl"`
+	DownloadTo                   string                      `json:"-"`
+	DownloadFilter               func(string) bool           `json:"-"`
+	DecompressTo                 string                      `json:"decompressTo"`
+	DecompressType               string                      `json:"-"`
+	DecompressedFilesToCopy      []string                    `json:"-"`
+	DecompressedFilesDestination []string                    `json:"decompressedFilesDestination"`
+	ValidationCmd                *exec.Cmd                   `json:"-"`
 }
 
-func Error(event rk_query.Event, err error) error {
-	color.Red(err.Error())
-	rk_common.Finish(event, err)
-	return err
+func commandDefault(name string) *cli.Command {
+	return &cli.Command{
+		Name:      name,
+		Usage:     fmt.Sprintf("install %s on local machine", name),
+		UsageText: fmt.Sprintf("rk install %s -r [release]", name),
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "tag",
+				Aliases: []string{"t"},
+				Usage:   "specify which tag to install, will use latest one if not specified",
+			},
+			&cli.BoolFlag{
+				Name:    "list",
+				Aliases: []string{"l"},
+				Usage:   "list releases, list most recent 10 releases",
+			},
+		},
+	}
 }
 
-func PrintReleasesFromGithub(owner, repo string, event rk_query.Event) error {
-	event.AddPair("owner", SwagOwner)
-	event.AddPair("repo", SwagRepo)
-	event.SetCounter("list_page_size", 5)
+func beforeDefault(ctx *cli.Context) error {
+	name := strings.Join(strings.Split(ctx.Command.FullName(), " "), "/")
+	event := rk_common.CreateEvent(name)
+	event.AddPayloads(zap.Strings("flags", ctx.FlagNames()))
 
-	opt := &github.ListOptions{
-		PerPage: 5,
+	// Inject event into context
+	ctx.Context = context.WithValue(ctx.Context, rk_common.EventKey, event)
+
+	return nil
+}
+
+func afterDefault(ctx *cli.Context) error {
+	rk_common.Finish(rk_common.GetEventV2(ctx), nil)
+	return nil
+}
+
+func hasListFlag(ctx *cli.Context) bool {
+	return ctx.IsSet("list")
+}
+
+func getTagFromFlags(ctx *cli.Context) string {
+	if ctx.IsSet("tag") {
+		return ctx.Value("tag").(string)
 	}
 
-	res, _, err := GithubClient.Repositories.ListReleases(context.Background(), owner, repo, opt)
+	return ""
+}
+
+func githubInfoToPayloads() []zap.Field {
+	return []zap.Field{
+		zap.String("owner", GithubInfo.Owner),
+		zap.String("repo", GithubInfo.Repo),
+		zap.String("url", GithubInfo.DownloadUrl),
+		zap.String("tempPath", GithubInfo.DecompressTo),
+		zap.Strings("destination", GithubInfo.DecompressedFilesDestination),
+	}
+}
+
+func listTagsFromGithub(ctx *cli.Context) error {
+	opt := &github.ListOptions{PerPage: 5}
+	res, _, err := GithubClient.Repositories.ListReleases(
+		context.Background(),
+		GithubInfo.Owner,
+		GithubInfo.Repo,
+		opt)
 
 	if err != nil {
-		return Error(event, rk_common.NewGithubClientError(
-			fmt.Sprintf("failed to list repo:%s release from github\n[err] %v", repo, err)))
+		return err
 	}
 
-	if InstallInfo.Debug {
-		printRelease(res...)
-	} else {
-		for i := range res {
-			color.Cyan("%s", res[i].GetTagName())
-		}
+	GithubInfo.ReleaseListFromGithub = res
+
+	return nil
+}
+
+func printTagsFromGithub(ctx *cli.Context) error {
+	opt := &github.ListOptions{PerPage: 5}
+	res, _, err := GithubClient.Repositories.ListReleases(
+		context.Background(),
+		GithubInfo.Owner,
+		GithubInfo.Repo,
+		opt)
+
+	if err != nil {
+		return err
 	}
 
 	if len(res) < 1 {
-		color.Cyan("no release found, please use default release")
+		color.Yellow("No tags found")
+		return nil
+	}
+
+	for i := range res {
+		color.Yellow("- %s  (%s)", res[i].GetTagName(), res[i].GetPublishedAt().String())
 	}
 
 	return nil
 }
 
-func GetReleaseContext(owner, repo, release string, event rk_query.Event) (*GithubReleaseContext, error) {
-	event.AddPair("owner", SwagOwner)
-	event.AddPair("repo", SwagRepo)
+func getReleaseToInstallFromGithub(ctx *cli.Context) error {
+	tagFromFlags := getTagFromFlags(ctx)
 
-	if len(release) < 1 {
-		color.Cyan("Search release name with release:latest")
-	}
+	// User provided tag to download, we need to get release info from github
+	if len(tagFromFlags) > 0 {
+		res, _, err := GithubClient.Repositories.GetReleaseByTag(
+			context.Background(),
+			GithubInfo.Owner,
+			GithubInfo.Repo,
+			tagFromFlags)
 
-	opt := &github.ListOptions{PerPage: 1}
-
-	ctx := &GithubReleaseContext{
-		Owner: owner,
-		Repo:  repo,
-		// this should be set it negative one while create a new one
-		AssetSize: -1,
-		DestPath:  UserLocalBin,
-	}
-
-	if len(release) < 1 {
-		// list releases
-		releases, _, err := GithubClient.Repositories.ListReleases(context.Background(), owner, repo, opt)
 		if err != nil {
-			return nil, Error(event,
-				rk_common.NewGithubClientError(
-					fmt.Sprintf("failed to get %s:%s latest release from github\n[err] %v", ctx.Owner, ctx.Repo, err)))
+			return err
 		}
 
-		if len(releases) < 1 {
-			return nil, Error(event,
-				rk_common.NewGithubClientError(
-					fmt.Sprintf("failed to get %s:%s latest release from github\n[err] %v", ctx.Owner, ctx.Repo, err)))
-		}
+		GithubInfo.ReleaseToDownload = res
 
-		if InstallInfo.Debug {
-			printRelease(releases...)
-		}
-
-		// get latest and assign to context
-		ctx.Release = releases[0]
-	} else {
-		var res *github.RepositoryRelease
-		var err error
-		if res, _, err = GithubClient.Repositories.GetReleaseByTag(context.Background(), owner, repo, release); err != nil {
-			return nil, Error(event,
-				rk_common.NewGithubClientError(
-					fmt.Sprintf("failed to get release:%s from github", release)))
-		}
-
-		ctx.Release = res
+		color.White("- %s (%s)",
+			GithubInfo.ReleaseToDownload.GetTagName(),
+			GithubInfo.ReleaseToDownload.GetPublishedAt().String())
+		return nil
 	}
 
-	color.Cyan("Get context with release:%s", ctx.Release.GetTagName())
-	// get release by latest release
-	res, _, err := GithubClient.Repositories.GetReleaseByTag(context.Background(), ctx.Owner, ctx.Repo, ctx.Release.GetTagName())
-	if err != nil {
-		return nil, Error(event,
-			rk_common.NewGithubClientError(
-				fmt.Sprintf("failed to get assets %s %s from github\n[err] %v", ctx.Repo, ctx.Release.GetTagName(), err)))
+	// List tags and pick the latest one
+	if err := listTagsFromGithub(ctx); err != nil {
+		return err
 	}
 
-	if InstallInfo.Debug {
-		printRelease(res)
+	if len(GithubInfo.ReleaseListFromGithub) < 1 {
+		return errors.New("no releases available from github")
 	}
 
-	if res == nil || len(res.Assets) < 1 {
-		return nil, Error(event,
-			rk_common.NewGithubClientError(
-				fmt.Sprintf("assets is empty %s %s from github\n[err] %v", ctx.Repo, ctx.Release.GetName(), err)))
-	}
+	GithubInfo.ReleaseToDownload = GithubInfo.ReleaseListFromGithub[0]
 
-	return ctx, nil
+	color.White("- %s (%s)",
+		GithubInfo.ReleaseToDownload.GetTagName(),
+		GithubInfo.ReleaseToDownload.GetPublishedAt().String())
+	return nil
 }
 
-func DownloadGithubRelease(ctx *GithubReleaseContext, event rk_query.Event) error {
-	if ctx.Filter == nil {
-		return Error(event,
-			rk_common.NewInvalidParamError(
-				fmt.Sprintf("download filter can not be empty")))
-	}
-
-	// get id based on filter
+func downloadFromGithub(ctx *cli.Context) error {
 	var id = int64(-1)
-	var downloadURL = ""
-	for i := range ctx.Release.Assets {
-		url := *ctx.Release.Assets[i].BrowserDownloadURL
-		if ctx.Filter(url) {
-			id = ctx.Release.Assets[i].GetID()
-			downloadURL = url
-			ctx.AssetSize = int64(ctx.Release.Assets[i].GetSize())
-			event.AddPair("asset_id", strconv.FormatInt(id, 10))
-			event.AddPair("asset_size_bytes", strconv.FormatInt(ctx.AssetSize, 10))
+	var fileSize int64
+	// 1: iterate assets in release and pick the right one
+	for i := range GithubInfo.ReleaseToDownload.Assets {
+		asset := GithubInfo.ReleaseToDownload.Assets[i]
+		if GithubInfo.DownloadFilter(*asset.BrowserDownloadURL) {
+			id = asset.GetID()
+			fileSize = int64(asset.GetSize())
+			GithubInfo.DownloadUrl = *asset.BrowserDownloadURL
 			break
 		}
 	}
 
-	ctx.RemoteURL = downloadURL
-	ctx.LocalFilePath = path.Join(RkHomeDir, path.Base(downloadURL))
-	event.AddPair("local_file_path", ctx.LocalFilePath)
-	color.Cyan("Download %s to %s", ctx.RemoteURL, ctx.LocalFilePath)
-
+	// 2: construct local path of where to write the file
+	GithubInfo.DownloadTo = path.Join(RkHomeDir, path.Base(GithubInfo.DownloadUrl))
 	if id == -1 {
-		return Error(event,
-			rk_common.NewInvalidParamError(
-				fmt.Sprintf("failed to get downloadable id with release:%s", ctx.Release.GetName())))
+		return errors.New(fmt.Sprintf("failed to get downloadable id with tag:%s", GithubInfo.ReleaseToDownload.GetName()))
 	}
 
-	// get reader object
+	// 3: get reader object from github
+	color.White("- Start to download %s to %s", GithubInfo.DownloadUrl, GithubInfo.DownloadTo)
 	reader, _, err := GithubClient.Repositories.DownloadReleaseAsset(
 		context.Background(),
-		ctx.Owner,
-		ctx.Repo,
+		GithubInfo.Owner,
+		GithubInfo.Repo,
 		id,
 		http.DefaultClient)
-
 	if err != nil {
-		return Error(event,
-			rk_common.NewGithubClientError(
-				fmt.Sprintf("failed to call github API for download Assert id:%d\n[err] %v", id, err)))
+		return errors.New(fmt.Sprintf("failed to call github API. %v", err))
 	}
 
-	// create and open/create local file based on download URL
-	f, err := os.OpenFile(ctx.LocalFilePath, os.O_CREATE|os.O_WRONLY, 0644)
+	// 4: create and open/create local file based on download URL
+	f, err := os.OpenFile(GithubInfo.DownloadTo, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return Error(event,
-			rk_common.NewFileOperationError(
-				fmt.Sprintf("failed to open file at %s\n[err] %v", ctx.LocalFilePath, err)))
+		errors.New(fmt.Sprintf("failed to open file. %v", err))
 	}
 	defer f.Close()
 
-	// start downloading
-	bar := progressbar.DefaultBytes(ctx.AssetSize, "downloading")
+	// 5: start downloading
+	bar := progressbar.DefaultBytes(fileSize, "downloading")
 	_, err = io.Copy(io.MultiWriter(f, bar), reader)
 	if err != nil {
-		return Error(event,
-			rk_common.NewFileOperationError(
-				fmt.Sprintf("failed to write to file at %s\n[err] %v", ctx.LocalFilePath, err)))
+		return errors.New(fmt.Sprintf("failed to write to file. %v", err))
 	}
 
-	if ctx.AssetSize < 0 {
-		println()
-	}
-
-	event.AddPair("remote_url", ctx.RemoteURL)
-	event.AddPair("local_file_path", ctx.LocalFilePath)
-	event.AddPair("release", ctx.Release.GetName())
 	return nil
 }
 
-// extract with tar command
-func ExtractToDest(ctx *GithubReleaseContext, event rk_query.Event) error {
-	// create temp dir
-	if err := createTempDir(ctx, event); err != nil {
+func decompressFile(ctx *cli.Context) error {
+	// 1: create temp dir
+	if err := createTempDirForDecompress(); err != nil {
 		return err
 	}
-	color.White("temporary directory create at %s success", ctx.TempPath)
+	color.White("- Create temporary directory at %s", GithubInfo.DecompressTo)
 
-	var bytes []byte
+	// 2: decompress
+	color.White("- Decompress %s to %s", GithubInfo.DownloadTo, GithubInfo.DecompressTo)
 	var err error
-	if ctx.ExtractType == "tar" {
-		if len(ctx.ExtractArg) > 0 {
-			bytes, err = exec.Command("tar", "-C", ctx.TempPath, "-xvzf", ctx.LocalFilePath, ctx.ExtractArg).CombinedOutput()
-		} else {
-			bytes, err = exec.Command("tar", "-C", ctx.TempPath, "-xvzf", ctx.LocalFilePath).CombinedOutput()
-		}
-	} else if ctx.ExtractType == "zip" {
-		if len(ctx.ExtractArg) > 0 {
-			bytes, err = exec.Command("unzip", "-o", ctx.LocalFilePath, "-d", ctx.TempPath, ctx.ExtractArg).CombinedOutput()
-		} else {
-			bytes, err = exec.Command("unzip", "-o", ctx.LocalFilePath, "-d", ctx.TempPath).CombinedOutput()
-		}
+	if GithubInfo.DecompressType == "tar" {
+		_, err = exec.Command("tar", "-C", GithubInfo.DecompressTo, "-xvzf", GithubInfo.DownloadTo).CombinedOutput()
+	} else if GithubInfo.DecompressType == "zip" {
+		_, err = exec.Command("unzip", "-o", GithubInfo.DownloadTo, "-d", GithubInfo.DecompressTo).CombinedOutput()
 	} else {
-		return Error(event, rk_common.NewInvalidParamError(fmt.Sprintf("invalid ExtractType:%s", ctx.ExtractType)))
+		return errors.New("unknown file type to decompress")
 	}
 
 	if err != nil {
-		return Error(event,
-			rk_common.NewFileOperationError(
-				fmt.Sprintf("failed to extract %s to %s\n[err] %v\n[stderr] %s", ctx.LocalFilePath, ctx.TempPath, err, string(bytes))))
-	}
-	color.White("extract %s to %s success", ctx.LocalFilePath, ctx.TempPath)
-
-	// copy to target folder
-	// chmod to protoc
-	bytes, err = exec.Command("/bin/sh", "-c", fmt.Sprintf("chmod -R +rx %s", path.Join(ctx.TempPath, ctx.ExtractPath))).CombinedOutput()
-	bytes, err = exec.Command("/bin/sh", "-c", fmt.Sprintf("sudo cp -r %s %s", path.Join(ctx.TempPath, ctx.ExtractPath), ctx.DestPath)).CombinedOutput()
-
-	if err != nil {
-		return Error(event,
-			rk_common.NewFileOperationError(
-				fmt.Sprintf("failed to copy %s to %s\n[err] %v\n[stderr] %s", path.Join(ctx.TempPath, ctx.ExtractPath), ctx.DestPath, err, string(bytes))))
-	}
-	color.White("copy %s to %s success", path.Join(ctx.TempPath, ctx.ExtractPath), ctx.DestPath)
-
-	event.AddPair("temp_path", ctx.TempPath)
-	event.AddPair("dest_path", ctx.DestPath)
-	event.AddPair("extract_type", ctx.ExtractType)
-	event.AddPair("extract_path", ctx.ExtractPath)
-
-	return nil
-}
-
-func GoGetFromGithub(repo, url, release string, event rk_query.Event) error {
-	color.Cyan("[Action] install %s@%s", repo, release)
-	event.AddPair("repo", repo)
-	event.AddPair("url", url)
-	event.AddPair("releases", release)
-
-	if len(release) > 1 {
-		url += fmt.Sprintf("@%s", release)
-	}
-
-	bytes, err := exec.Command("go", "get", "-v", url).CombinedOutput()
-	if err != nil {
-		return Error(event,
-			rk_common.NewGithubClientError(
-				fmt.Sprintf("failed to install %s\n[err] %v\n[stderr] %s", repo, err, string(bytes))))
-	}
-
-	if InstallInfo.Debug {
-		color.Yellow("[stdout] %s", string(bytes))
+		return errors.New(fmt.Sprintf("failed to decompress. %v", err))
 	}
 
 	return nil
 }
 
-func ValidateInstallation(command *exec.Cmd, event rk_query.Event) error {
-	color.Cyan("[Action] validate installation")
-	bytes, err := command.CombinedOutput()
+func copyToDestination(ctx *cli.Context) error {
+	for i := range GithubInfo.DecompressedFilesDestination {
+		srcPath := path.Join(GithubInfo.DecompressTo, GithubInfo.DecompressedFilesToCopy[i])
+		destPath := GithubInfo.DecompressedFilesDestination[i]
+
+		if GithubInfo.Repo == "protoc" {
+			_, err := exec.Command("/bin/sh", "-c", fmt.Sprintf("chmod -R +rx %s", srcPath)).CombinedOutput()
+			if err != nil {
+				return errors.New(fmt.Sprintf("failed to chmod protoc. %v", err))
+			}
+		}
+		_, err := exec.Command("/bin/sh", "-c", fmt.Sprintf("sudo cp -r %s %s", srcPath, destPath)).CombinedOutput()
+		if err != nil {
+			return errors.New(fmt.Sprintf("failed to copy %s to %s. %v", GithubInfo.DecompressTo, destPath, err))
+		}
+
+		color.White("- Copy %s to %s success", srcPath, destPath)
+	}
+	//
+	//// 1: copy to target
+	//srcPath := path.Join(GithubInfo.DecompressTo, GithubInfo.DecompressedFilesToCopy)
+	//if GithubInfo.Repo == "protoc" {
+	//	_, err := exec.Command("/bin/sh", "-c", fmt.Sprintf("chmod -R +rx %s", srcPath)).CombinedOutput()
+	//	if err != nil {
+	//		return errors.New(fmt.Sprintf("failed to chmod protoc. %v", err))
+	//	}
+	//}
+	//_, err := exec.Command("/bin/sh", "-c", fmt.Sprintf("sudo cp -r %s %s", srcPath, GithubInfo.DecompressedFilesDestination)).CombinedOutput()
+	//if err != nil {
+	//	return errors.New(fmt.Sprintf("failed to copy %s to %s. %v", GithubInfo.DecompressTo, GithubInfo.DecompressedFilesDestination, err))
+	//}
+	//
+	//color.White("- Copy %s to %s success", srcPath, GithubInfo.DecompressedFilesDestination)
+
+	return nil
+}
+
+func goGetFromRemoteUrl(ctx *cli.Context) error {
+	tag := getTagFromFlags(ctx)
+	if len(tag) < 1 {
+		tag = "latest"
+	}
+
+	rk_common.GetEventV2(ctx).AddPayloads(zap.String("tag", tag))
+	color.White("- %s@%s", GithubInfo.GoGetUrl, tag)
+
+	_, err := exec.Command("go", "get", "-v", fmt.Sprintf("%s@%s", GithubInfo.GoGetUrl, tag)).CombinedOutput()
 	if err != nil {
-		return Error(event,
-			rk_common.NewFileOperationError(
-				fmt.Sprintf("failed to show version\n[err] %v\n[stderr] %s", err, string(bytes))))
+		return errors.New(fmt.Sprintf("failed to go get from remote repo. %v", err))
+	}
+
+	return nil
+}
+
+func validateInstallation(ctx *cli.Context) error {
+	bytes, err := GithubInfo.ValidationCmd.CombinedOutput()
+	if err != nil {
+		return errors.New(fmt.Sprintf("failed to validate. %v", err))
 	}
 
 	color.White("%s", strings.TrimRight(string(bytes), "\n"))
-	color.Green("[success]")
 	return nil
 }
 
-func printRelease(releases ...*github.RepositoryRelease) {
-	type releaseSimple struct {
-		TagName     *string           `json:"tag_name,omitempty"`
-		PublishedAt *github.Timestamp `json:"published_at,omitempty"`
-		Assets      []struct {
-			Name               *string `json:"name,omitempty"`
-			BrowserDownloadURL *string `json:"browser_download_url,omitempty"`
-		} `json:"assets,omitempty"`
-	}
+func createTempDirForDecompress() error {
+	dir, _ := path.Split(GithubInfo.DownloadTo)
 
-	for i := range releases {
-		release := releases[i]
-		var simple releaseSimple
-
-		// marshal to complete json string
-		bytes, _ := json.Marshal(release)
-
-		// unmarshal string to simple one
-		json.Unmarshal(bytes, &simple)
-
-		// marshal it again with indent
-		bytes, _ = json.MarshalIndent(simple, "", "  ")
-
-		// print it
-		color.Yellow(fmt.Sprintf(string(bytes)))
-	}
-
-}
-
-func createTempDir(ctx *GithubReleaseContext, event rk_query.Event) error {
-	// split file name and directory
-	dir, _ := path.Split(ctx.LocalFilePath)
-
-	target := path.Join(dir, ctx.Repo+"-"+strconv.Itoa(time.Now().Nanosecond()))
+	target := path.Join(dir, GithubInfo.Repo+"-"+strconv.Itoa(time.Now().Nanosecond()))
 	if err := os.MkdirAll(target, 0777); err != nil {
-		return Error(event,
-			rk_common.NewFileOperationError(
-				fmt.Sprintf("failed to create target folder %s\n[err] %v", target, err)))
+		return err
 	}
-	ctx.TempPath = target
 
+	GithubInfo.DecompressTo = target
 	return nil
 }

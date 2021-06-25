@@ -5,94 +5,41 @@
 package rk_install
 
 import (
-	"github.com/fatih/color"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
-	"runtime"
-	"strings"
 )
 
-const (
-	GoLangCILintOwner = "golangci"
-	GoLangCILintRepo  = "golangci-lint"
-)
-
-// Install golangci-lint on target hosts directly download assets from github
-func InstallGoLangCILintCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "golangci-lint",
-		Usage:     "install golangci-lint on local machine",
-		UsageText: "rk install golangci-lint -r [release]",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "release, r",
-				Aliases:     []string{"r"},
-				Destination: &InstallInfo.Release,
-				Required:    false,
-				Usage:       "golangci-lint release",
-			},
-			&cli.BoolFlag{
-				Name:        "list, l",
-				Aliases:     []string{"l"},
-				Destination: &InstallInfo.ListReleases,
-				Usage:       "list golangci-lint releases, list most recent 10 releases",
-			},
-		},
-		Action: InstallGoLangCILintAction,
-	}
+// Install on local machine
+func installGolangCiLint() *cli.Command {
+	command := commandDefault("golangci-lint")
+	command.Before = beforeDefault
+	command.Action = golangCiLintAction
+	command.After = afterDefault
 
 	return command
 }
+func golangCiLintAction(ctx *cli.Context) error {
+	GithubInfo.Owner = "golangci"
+	GithubInfo.Repo = "golangci-lint"
+	GithubInfo.GoGetUrl = "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	GithubInfo.ValidationCmd = exec.Command("golangci-lint", "--version")
 
-func InstallGoLangCILintAction(ctx *cli.Context) error {
-	if InstallInfo.ListReleases {
-		event := rk_common.GetEvent("list-golangci-lint-release")
-		return PrintReleasesFromGithub(GoLangCILintOwner, GoLangCILintRepo, event)
+	// List tags only
+	if hasListFlag(ctx) {
+		chain := rk_common.NewActionChain()
+		chain.Add("List tags from github", printTagsFromGithub, false)
+		return chain.Execute(ctx)
 	}
 
-	event := rk_common.GetEvent("install-golangci-lint")
-	// 1: get release context
-	releaseCtx, err := GetReleaseContext(GoLangCILintOwner, GoLangCILintRepo, InstallInfo.Release, event)
-	if err != nil {
-		return err
-	}
-	Success()
+	chain := rk_common.NewActionChain()
+	chain.Add("Go get from remote repo", goGetFromRemoteUrl, false)
+	chain.Add("Validate installation", validateInstallation, false)
+	err := chain.Execute(ctx)
 
-	// 2.1: specify filter based on pattern
-	// https://github.com/golangci/golangci-lint/releases
-	releaseCtx.Filter = func(url string) bool {
-		sysArch := runtime.GOOS + "-" + runtime.GOARCH
+	// Log to event
+	event := rk_common.GetEventV2(ctx)
+	event.AddPayloads(githubInfoToPayloads()...)
 
-		if strings.Contains(url, sysArch) {
-			return true
-		}
-
-		return false
-	}
-
-	// 2.2: download with filter
-	DownloadGithubRelease(releaseCtx, event)
-	if err != nil {
-		return err
-	}
-	Success()
-
-	// 3: install release
-	color.Cyan("install golangci-lint in %s to %s", releaseCtx.LocalFilePath, UserLocalBin)
-	releaseCtx.ExtractType = "tar"
-	releaseCtx.ExtractArg = "--strip-components=1"
-	releaseCtx.ExtractPath = "golangci-lint"
-	if err = ExtractToDest(releaseCtx, event); err != nil {
-		return err
-	}
-	Success()
-
-	// 4: validate installation
-	if err := ValidateInstallation(exec.Command("golangci-lint", "--version"), event); err != nil {
-		return err
-	}
-
-	rk_common.Finish(event, nil)
-	return nil
+	return err
 }

@@ -5,39 +5,27 @@
 package rk_uninstall
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-// Install golangci-lint on target hosts
-func UninstallGoLangCILintCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "golangci-lint",
-		Usage:     "uninstall golangci-lint on local machine",
-		UsageText: "rk uninstall golangci-lint",
-		Action:    UninstallGoLangCILintAction,
-	}
+func uninstallGolangCiLint() *cli.Command {
+	command := commandDefault("golangci-lint")
+	command.Before = beforeDefault
+	command.Action = golangCiLintAction
+	command.After = afterDefault
 
 	return command
 }
 
-func UninstallGoLangCILintAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-golangci-lint")
-	defer rk_common.Finish(event, nil)
+func golangCiLintAction(ctx *cli.Context) error {
+	UninstallInfo.app = "golangci-lint"
 
-	// check path
-	path := CheckPath("golangci-lint", event)
+	chain := rk_common.NewActionChain()
+	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
+	chain.Add("Validate uninstallation", validateUninstallation, false)
+	err := chain.Execute(ctx)
 
-	if len(path) < 1 {
-		Success()
-		return nil
-	}
-
-	// uninstall release
-	color.Cyan("Uninstall golangci-lint at %s", path)
-	exec.Command("rm", path).CombinedOutput()
-	Success()
-	return nil
+	return err
 }

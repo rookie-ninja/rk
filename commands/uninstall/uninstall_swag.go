@@ -5,39 +5,27 @@
 package rk_uninstall
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-// Install swag on target hosts
-func UninstallSwagCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "swag",
-		Usage:     "uninstall swag on local machine",
-		UsageText: "rk uninstall swag",
-		Action:    UninstallSwagAction,
-	}
+func uninstallSwag() *cli.Command {
+	command := commandDefault("swag")
+	command.Before = beforeDefault
+	command.Action = swagAction
+	command.After = afterDefault
 
 	return command
 }
 
-func UninstallSwagAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-swag")
-	defer rk_common.Finish(event, nil)
+func swagAction(ctx *cli.Context) error {
+	UninstallInfo.app = "swag"
 
-	// check path
-	path := CheckPath("swag", event)
+	chain := rk_common.NewActionChain()
+	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
+	chain.Add("Validate uninstallation", validateUninstallation, false)
+	err := chain.Execute(ctx)
 
-	if len(path) < 1 {
-		Success()
-		return nil
-	}
-
-	// uninstall release
-	color.Cyan("Uninstall swag at %s", path)
-	exec.Command("rm", path).CombinedOutput()
-	Success()
-	return nil
+	return err
 }

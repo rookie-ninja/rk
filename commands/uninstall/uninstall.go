@@ -13,36 +13,30 @@ func Uninstall() *cli.Command {
 		UsageText: "rk uninstall [third-party software]",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:        "debug",
-				Aliases:     []string{"d"},
-				Usage:       "debug mod",
-				Destination: &InstallInfo.Debug,
+				Name:    "debug",
+				Aliases: []string{"d"},
+				Usage:   "debug mod",
 			},
 		},
 
 		Subcommands: []*cli.Command{
-			UninstallSwagCommand(),
-			UninstallGoCovCommand(),
-			UninstallGoLintCommand(),
-			UninstallGoLangCILintCommand(),
-			UninstallMockGenCommand(),
-			UninstallProtobufCommand(),
-			UninstallProtocGenDocCommand(),
-			UninstallProtocGenGoCommand(),
-			UninstallProtocGenSwaggerCommand(),
+			uninstallPkger(),
+			uninstallBuf(),
+			uninstallProtocGenGrpcGateway(),
+			uninstallSwag(),
+			uninstallGoCov(),
+			uninstallGolint(),
+			uninstallGolangCiLint(),
+			uninstallMockGen(),
+			uninstallProtobuf(),
+			uninstallProtocGenDoc(),
+			uninstallProtocGenGo(),
+			uninstallProtocGenOpenApiV2(),
 			UninstallRkStdCommand(),
-			UninstallCfsslCommand(),
-			UninstallCfsslJsonCommand(),
+			uninstallCfssl(),
+			uninstallCfsslJson(),
 		},
 	}
 
 	return command
 }
-
-type installInfo struct {
-	Debug        bool
-	ListReleases bool
-	Release      string
-}
-
-var InstallInfo = installInfo{}

@@ -5,39 +5,27 @@
 package rk_uninstall
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-// Install protoc-gen-grpc-gateway on target hosts
-func UninstallProtocGenGrpcGatewayCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "protoc-gen-grpc-gateway",
-		Usage:     "uninstall protoc-gen-grpc-gateway on local machine",
-		UsageText: "rk uninstall protoc-gen-grpc-gateway",
-		Action:    UninstallMockGenAction,
-	}
+func uninstallProtocGenGrpcGateway() *cli.Command {
+	command := commandDefault("protoc-gen-grpc-gateway")
+	command.Before = beforeDefault
+	command.Action = protocGenGrpcGatewayAction
+	command.After = afterDefault
 
 	return command
 }
 
-func UninstallProtocGenGrpcGatewayAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-protoc-gen-grpc-gateway")
-	defer rk_common.Finish(event, nil)
+func protocGenGrpcGatewayAction(ctx *cli.Context) error {
+	UninstallInfo.app = "protoc-gen-grpc-gateway"
 
-	// check path
-	path := CheckPath("protoc-gen-grpc-gateway", event)
+	chain := rk_common.NewActionChain()
+	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
+	chain.Add("Validate uninstallation", validateUninstallation, false)
+	err := chain.Execute(ctx)
 
-	if len(path) < 1 {
-		Success()
-		return nil
-	}
-
-	// uninstall release
-	color.Cyan("Uninstall protoc-gen-grpc-gateway at %s", path)
-	exec.Command("rm", path).CombinedOutput()
-	Success()
-	return nil
+	return err
 }

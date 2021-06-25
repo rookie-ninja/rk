@@ -5,39 +5,27 @@
 package rk_uninstall
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-// Install mockgen on target hosts
-func UninstallMockGenCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "golangci-lint",
-		Usage:     "uninstall golangci-lint on local machine",
-		UsageText: "rk uninstall golangci-lint",
-		Action:    UninstallMockGenAction,
-	}
+func uninstallMockGen() *cli.Command {
+	command := commandDefault("mockgen")
+	command.Before = beforeDefault
+	command.Action = mockGenAction
+	command.After = afterDefault
 
 	return command
 }
 
-func UninstallMockGenAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-mockgen")
-	defer rk_common.Finish(event, nil)
+func mockGenAction(ctx *cli.Context) error {
+	UninstallInfo.app = "mockgen"
 
-	// check path
-	path := CheckPath("mockgen", event)
+	chain := rk_common.NewActionChain()
+	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
+	chain.Add("Validate uninstallation", validateUninstallation, false)
+	err := chain.Execute(ctx)
 
-	if len(path) < 1 {
-		Success()
-		return nil
-	}
-
-	// uninstall release
-	color.Cyan("Uninstall mockgen at %s", path)
-	exec.Command("rm", path).CombinedOutput()
-	Success()
-	return nil
+	return err
 }

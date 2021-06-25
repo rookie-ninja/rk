@@ -5,40 +5,27 @@
 package rk_uninstall
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-// Install protobuf on target hosts
-func UninstallProtobufCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "protobuf",
-		Usage:     "uninstall protobuf on local machine",
-		UsageText: "rk uninstall protobuf",
-		Action:    UninstallProtobufAction,
-	}
+func uninstallProtobuf() *cli.Command {
+	command := commandDefault("protobuf")
+	command.Before = beforeDefault
+	command.Action = protobufAction
+	command.After = afterDefault
 
 	return command
 }
 
-func UninstallProtobufAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-protobuf")
-	defer rk_common.Finish(event, nil)
+func protobufAction(ctx *cli.Context) error {
+	UninstallInfo.app = "protobuf"
 
-	// check path
-	path := CheckPath("protoc", event)
+	chain := rk_common.NewActionChain()
+	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
+	chain.Add("Validate uninstallation", validateUninstallation, false)
+	err := chain.Execute(ctx)
 
-	if len(path) < 1 {
-		Success()
-		return nil
-	}
-
-	// uninstall release
-	color.Cyan("Uninstall protobuf at %s", path)
-	exec.Command("rm", path).CombinedOutput()
-	exec.Command("rm", "-rf", "/usr/local/include/google")
-	Success()
-	return nil
+	return err
 }

@@ -5,39 +5,27 @@
 package rk_uninstall
 
 import (
-	"github.com/fatih/color"
+	"fmt"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
 )
 
-// Install gocov on target hosts
-func UninstallGoCovCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "gocov",
-		Usage:     "uninstall gocov on local machine",
-		UsageText: "rk uninstall gocov",
-		Action:    UninstallGoCovAction,
-	}
+func uninstallGoCov() *cli.Command {
+	command := commandDefault("gocov")
+	command.Before = beforeDefault
+	command.Action = goCovAction
+	command.After = afterDefault
 
 	return command
 }
 
-func UninstallGoCovAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("uninstall-gocov")
-	defer rk_common.Finish(event, nil)
+func goCovAction(ctx *cli.Context) error {
+	UninstallInfo.app = "gocov"
 
-	// check path
-	path := CheckPath("gocov", event)
+	chain := rk_common.NewActionChain()
+	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
+	chain.Add("Validate uninstallation", validateUninstallation, false)
+	err := chain.Execute(ctx)
 
-	if len(path) < 1 {
-		Success()
-		return nil
-	}
-
-	// uninstall release
-	color.Cyan("Uninstall gocov at %s", path)
-	exec.Command("rm", path).CombinedOutput()
-	Success()
-	return nil
+	return err
 }

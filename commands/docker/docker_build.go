@@ -26,7 +26,7 @@ func DockerBuildAction(ctx *cli.Context) error {
 	event := rk_common.GetEvent("docker-build")
 
 	// 0: validate docker command
-	color.Cyan("[Action] validating docker environment")
+	color.Cyan("==> [Action] validating docker environment")
 	if err := rk_common.ValidateCommand("docker", event); err != nil {
 		return err
 	}

@@ -1,7 +1,3 @@
-// Copyright (c) 2020 rookie-ninja
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file.
 package rk_install
 
 import (
@@ -11,20 +7,20 @@ import (
 )
 
 // Install on local machine
-func installGolint() *cli.Command {
-	command := commandDefault("golint")
+func installPkger() *cli.Command {
+	command := commandDefault("pkger")
 	command.Before = beforeDefault
-	command.Action = golintAction
+	command.Action = pkgerAction
 	command.After = afterDefault
 
 	return command
 }
 
-func golintAction(ctx *cli.Context) error {
-	GithubInfo.Owner = "golang"
-	GithubInfo.Repo = "lint"
-	GithubInfo.GoGetUrl = "golang.org/x/lint/golint"
-	GithubInfo.ValidationCmd = exec.Command("which", "golint")
+func pkgerAction(ctx *cli.Context) error {
+	GithubInfo.Owner = "markbates"
+	GithubInfo.Repo = "pkger"
+	GithubInfo.GoGetUrl = "github.com/markbates/pkger/cmd/pkger"
+	GithubInfo.ValidationCmd = exec.Command("which", "pkger")
 
 	// List tags only
 	if hasListFlag(ctx) {

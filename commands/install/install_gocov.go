@@ -10,56 +10,37 @@ import (
 	"os/exec"
 )
 
-const (
-	GoCovOwner   = "axw"
-	GoCovRepo    = "gocov"
-	GoCovUrlBase = "github.com/axw/gocov/gocov"
-)
-
-// Install gocov on target hosts with go get command
-func InstallGoCovCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "gocov",
-		Usage:     "install gocov on local machine",
-		UsageText: "rk install gocov -r [release]",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "release, r",
-				Aliases:     []string{"r"},
-				Destination: &InstallInfo.Release,
-				Required:    false,
-				Usage:       "gocov release",
-			},
-			&cli.BoolFlag{
-				Name:        "list, l",
-				Aliases:     []string{"l"},
-				Destination: &InstallInfo.ListReleases,
-				Usage:       "list gocov releases, list most recent 10 releases",
-			},
-		},
-		Action: InstallGoCovAction,
-	}
+// Install on local machine
+func installGoCov() *cli.Command {
+	command := commandDefault("gocov")
+	command.Before = beforeDefault
+	command.Action = goCovAction
+	command.After = afterDefault
 
 	return command
 }
 
-func InstallGoCovAction(ctx *cli.Context) error {
-	if InstallInfo.ListReleases {
-		event := rk_common.GetEvent("list-gocov-release")
-		return PrintReleasesFromGithub(GoCovOwner, GoCovRepo, event)
+func goCovAction(ctx *cli.Context) error {
+	GithubInfo.Owner = "axw"
+	GithubInfo.Repo = "gocov"
+	GithubInfo.GoGetUrl = "github.com/axw/gocov/gocov"
+	GithubInfo.ValidationCmd = exec.Command("which", "gocov")
+
+	// List tags only
+	if hasListFlag(ctx) {
+		chain := rk_common.NewActionChain()
+		chain.Add("List tags from github", printTagsFromGithub, false)
+		return chain.Execute(ctx)
 	}
 
-	event := rk_common.GetEvent("install-gocov")
-	// go get package
-	if err := GoGetFromGithub(GoCovRepo, GoCovUrlBase, InstallInfo.Release, event); err != nil {
-		return err
-	}
-	Success()
+	chain := rk_common.NewActionChain()
+	chain.Add("Go get from remote repo", goGetFromRemoteUrl, false)
+	chain.Add("Validate installation", validateInstallation, false)
+	err := chain.Execute(ctx)
 
-	if err := ValidateInstallation(exec.Command("which", "gocov"), event); err != nil {
-		return err
-	}
+	// Log to event
+	event := rk_common.GetEventV2(ctx)
+	event.AddPayloads(githubInfoToPayloads()...)
 
-	rk_common.Finish(event, nil)
-	return nil
+	return err
 }

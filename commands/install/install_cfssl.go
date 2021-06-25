@@ -10,56 +10,37 @@ import (
 	"os/exec"
 )
 
-const (
-	CfsslOwner   = "cloudflare"
-	CfsslRepo    = "cfssl"
-	CfsslUrlBase = "github.com/cloudflare/cfssl/cmd/cfssl"
-)
-
-// Install cfssl on target hosts
-func InstallCfsslCommand() *cli.Command {
-	command := &cli.Command{
-		Name:      "cfssl",
-		Usage:     "install cfssl on local machine",
-		UsageText: "rk install cfssl -r [release]",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "release, r",
-				Aliases:     []string{"r"},
-				Destination: &InstallInfo.Release,
-				Required:    false,
-				Usage:       "cfssl release",
-			},
-			&cli.BoolFlag{
-				Name:        "list, l",
-				Aliases:     []string{"l"},
-				Destination: &InstallInfo.ListReleases,
-				Usage:       "list cfssl releases, list most recent 10 releases",
-			},
-		},
-		Action: InstallCfsslAction,
-	}
+// Install on local machine
+func installCfssl() *cli.Command {
+	command := commandDefault("cfssl")
+	command.Before = beforeDefault
+	command.Action = cfsslAction
+	command.After = afterDefault
 
 	return command
 }
 
-func InstallCfsslAction(ctx *cli.Context) error {
-	if InstallInfo.ListReleases {
-		event := rk_common.GetEvent("list-cfssl-release")
-		return PrintReleasesFromGithub(CfsslOwner, CfsslRepo, event)
+func cfsslAction(ctx *cli.Context) error {
+	GithubInfo.Owner = "cloudflare"
+	GithubInfo.Repo = "cfssl"
+	GithubInfo.GoGetUrl = "github.com/cloudflare/cfssl/cmd/cfssl"
+	GithubInfo.ValidationCmd = exec.Command("cfssl", "version")
+
+	// List tags only
+	if hasListFlag(ctx) {
+		chain := rk_common.NewActionChain()
+		chain.Add("List tags from github", printTagsFromGithub, false)
+		return chain.Execute(ctx)
 	}
 
-	event := rk_common.GetEvent("install-cfssl")
-	// go get package
-	if err := GoGetFromGithub(CfsslRepo, CfsslUrlBase, InstallInfo.Release, event); err != nil {
-		return err
-	}
-	Success()
+	chain := rk_common.NewActionChain()
+	chain.Add("Go get from remote repo", goGetFromRemoteUrl, false)
+	chain.Add("Validate installation", validateInstallation, false)
+	err := chain.Execute(ctx)
 
-	if err := ValidateInstallation(exec.Command("cfssl", "version"), event); err != nil {
-		return err
-	}
+	// Log to event
+	event := rk_common.GetEventV2(ctx)
+	event.AddPayloads(githubInfoToPayloads()...)
 
-	rk_common.Finish(event, nil)
-	return nil
+	return err
 }
