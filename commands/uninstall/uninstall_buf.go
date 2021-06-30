@@ -1,4 +1,8 @@
-package rk_uninstall
+// Copyright (c) 2021 rookie-ninja
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file.
+package uninstall
 
 import (
 	"fmt"
@@ -18,7 +22,7 @@ func uninstallBuf() *cli.Command {
 func bufAction(ctx *cli.Context) error {
 	UninstallInfo.app = "buf"
 
-	chain := rk_common.NewActionChain()
+	chain := common.NewActionChain()
 	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
 	chain.Add("Validate uninstallation", validateUninstallation, false)
 	err := chain.Execute(ctx)

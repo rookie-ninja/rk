@@ -1,8 +1,8 @@
-// Copyright (c) 2020 rookie-ninja
+// Copyright (c) 2021 rookie-ninja
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
-package rk_install
+package install
 
 import "github.com/urfave/cli/v2"
 
@@ -20,20 +20,19 @@ func Install() *cli.Command {
 		},
 
 		Subcommands: []*cli.Command{
+			installBuf(),
+			installCfssl(),
+			installCfsslJson(),
+			installGoCov(),
+			installGolangCiLint(),
+			installMockGen(),
+			installPkger(),
 			installProtobuf(),
+			installProtocGenDoc(),
 			installProtocGenGo(),
 			installProtocGenGrpcGateway(),
 			installProtocGenOpenApiV2(),
-			installProtocGenDoc(),
-			installBuf(),
-			installGolangCiLint(),
-			installGoCov(),
-			installMockGen(),
 			installSwag(),
-			installCfssl(),
-			installCfsslJson(),
-			installPkger(),
-			installGolint(),
 			rkStdCommand(),
 		},
 	}

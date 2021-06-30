@@ -1,4 +1,8 @@
-package rk_install
+// Copyright (c) 2021 rookie-ninja
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file.
+package install
 
 import (
 	"github.com/rookie-ninja/rk/common"
@@ -32,7 +36,7 @@ func bufAction(ctx *cli.Context) error {
 
 	// List tags only
 	if hasListFlag(ctx) {
-		chain := rk_common.NewActionChain()
+		chain := common.NewActionChain()
 		chain.Add("List tags from github", printTagsFromGithub, false)
 		return chain.Execute(ctx)
 	}
@@ -53,7 +57,7 @@ func bufAction(ctx *cli.Context) error {
 		return false
 	}
 
-	chain := rk_common.NewActionChain()
+	chain := common.NewActionChain()
 	chain.Add("Find release from github", getReleaseToInstallFromGithub, false)
 	chain.Add("Download from github", downloadFromGithub, false)
 	chain.Add("Decompress file", decompressFile, false)
@@ -62,7 +66,7 @@ func bufAction(ctx *cli.Context) error {
 	err := chain.Execute(ctx)
 
 	// Log to event
-	event := rk_common.GetEventV2(ctx)
+	event := common.GetEvent(ctx)
 	event.AddPayloads(githubInfoToPayloads()...)
 
 	return err

@@ -1,102 +1,67 @@
-package rk_docker
+// Copyright (c) 2021 rookie-ninja
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file.
+package docker
 
 import (
-	"bufio"
-	"fmt"
-	"github.com/fatih/color"
+	"github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk/commands/build"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"os/exec"
-	"strings"
+	"os"
 )
 
-func DockerBuild() *cli.Command {
+func dockerBuild() *cli.Command {
 	command := &cli.Command{
 		Name:      "build",
 		Usage:     "build a docker image built with rk build command",
-		UsageText: "build",
-		Action:    DockerBuildAction,
+		UsageText: "rk docker build",
+		Before:    beforeDefault,
+		After:     afterDefault,
+		Action:    buildAction,
 	}
 
 	return command
 }
 
-func DockerBuildAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("docker-build")
-
-	// 0: validate docker command
-	color.Cyan("==> [Action] validating docker environment")
-	if err := rk_common.ValidateCommand("docker", event); err != nil {
-		return err
-	}
-	rk_common.Success()
-
-	// 1: read build.yaml file
-	config := &rk_common.BootConfig{}
-	if err := rk_common.MarshalBuildConfig("build.yaml", config, event); err != nil {
-		event.AddPair("marshal-config", "fail")
-		return rk_common.Error(event, err)
-	}
-
-	// 1: build project first
-	event.StartTimer("build")
-	config.Build.GOOS = "linux"
-	config.Build.GOARCH = "amd64"
-	if err := rk_build.DoBuildGo(config, event); err != nil {
-		event.AddPair("build", "fail")
-		event.AddErr(err)
-		event.EndTimer("build")
-		return rk_common.Error(event, err)
-	}
-	event.EndTimer("build")
-
-	// 3: determine docker registry and tag
-	if len(config.Docker.Build.Registry) < 1 {
-		config.Docker.Build.Registry = dockerRegistry
-	}
-	if len(config.Docker.Build.Tag) < 1 {
-		config.Docker.Build.Tag = dockerTag
-	}
-
-	args := []string{"build"}
-	if len(config.Docker.Build.Args) > 0 {
-		for i := range config.Docker.Build.Args {
-			arg := config.Docker.Build.Args[i]
-			if len(arg) > 0 {
-				args = append(args, strings.Split(arg, " ")...)
-			}
-		}
-	}
-
-	args = append(args, "-t", config.Docker.Build.Registry+":"+config.Docker.Build.Tag, ".")
-
-	color.Cyan(fmt.Sprintf("docker %s", strings.Join(args, " ")))
-
-	cmd := exec.Command("docker", args...)
-	out, _ := cmd.StdoutPipe()
-
-	if err := cmd.Start(); err != nil {
-		event.AddPair("docker-build", "fail")
-		rk_common.ClearTargetFolder("target", event)
-		rk_common.Error(event,
-			rk_common.NewScriptError(
-				fmt.Sprintf("failed to build docker image \n[err] %v", err)))
+func buildAction(ctx *cli.Context) error {
+	if err := common.UnmarshalBootConfig("build.yaml", common.BuildConfig); err != nil {
 		return err
 	}
 
-	go func() {
-		scanner := bufio.NewScanner(out)
-		for scanner.Scan() {
-			color.Yellow(scanner.Text())
+	common.BuildConfig.Build.GOOS = "linux"
+	common.BuildConfig.Build.GOARCH = "amd64"
+
+	chain := common.NewActionChain()
+	chain.Add("Validate docker environment", validateDockerCommand, false)
+	chain.Add("Clearing target folder", func(ctx *cli.Context) error {
+		// 0: Move to dir of where go.mod file exists
+		if err := os.Chdir(rkcommon.GetGoWd()); err != nil {
+			return err
 		}
-	}()
+		return os.RemoveAll(common.BuildTarget)
+	}, false)
 
-	cmd.Wait()
+	switch common.BuildConfig.Build.Type {
+	case "go":
+		chain.Add("Execute user command before", build.ExecCommandsBefore, false)
+		chain.Add("Execute user script before", build.ExecScriptBefore, false)
+		chain.Add("Build go file", build.BuildGoFile, false)
+		chain.Add("Copy to target folder", build.CopyToTarget, false)
+		chain.Add("Generate rk meta from on local", build.WriteRkMetaFile, false)
+		chain.Add("Execute user script after", build.ExecScriptAfter, false)
+		chain.Add("Execute user command after", build.ExecCommandsAfter, false)
+	default:
+		chain.Add("Execute user command before", build.ExecCommandsBefore, false)
+		chain.Add("Execute user script before", build.ExecScriptBefore, false)
+		chain.Add("Copy to target folder", build.CopyToTarget, false)
+		chain.Add("Generate rk meta from on local", build.WriteRkMetaFile, false)
+		chain.Add("Execute user script after", build.ExecScriptAfter, false)
+		chain.Add("Execute user command after", build.ExecCommandsAfter, false)
+	}
 
-	rk_common.Success()
-	event.AddPair("docker-build", "success")
+	chain.Add("Build docker image", buildDockerImage, false)
 
-	rk_common.Finish(event, nil)
-	return nil
+	return chain.Execute(ctx)
 }

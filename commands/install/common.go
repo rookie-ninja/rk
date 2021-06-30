@@ -1,8 +1,8 @@
-// Copyright (c) 2020 rookie-ninja
+// Copyright (c) 2021 rookie-ninja
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
-package rk_install
+package install
 
 import (
 	"context"
@@ -82,17 +82,17 @@ func commandDefault(name string) *cli.Command {
 
 func beforeDefault(ctx *cli.Context) error {
 	name := strings.Join(strings.Split(ctx.Command.FullName(), " "), "/")
-	event := rk_common.CreateEvent(name)
+	event := common.CreateEvent(name)
 	event.AddPayloads(zap.Strings("flags", ctx.FlagNames()))
 
 	// Inject event into context
-	ctx.Context = context.WithValue(ctx.Context, rk_common.EventKey, event)
+	ctx.Context = context.WithValue(ctx.Context, common.EventKey, event)
 
 	return nil
 }
 
 func afterDefault(ctx *cli.Context) error {
-	rk_common.Finish(rk_common.GetEventV2(ctx), nil)
+	common.Finish(common.GetEvent(ctx), nil)
 	return nil
 }
 
@@ -316,7 +316,7 @@ func goGetFromRemoteUrl(ctx *cli.Context) error {
 		tag = "latest"
 	}
 
-	rk_common.GetEventV2(ctx).AddPayloads(zap.String("tag", tag))
+	common.GetEvent(ctx).AddPayloads(zap.String("tag", tag))
 	color.White("- %s@%s", GithubInfo.GoGetUrl, tag)
 
 	_, err := exec.Command("go", "get", "-v", fmt.Sprintf("%s@%s", GithubInfo.GoGetUrl, tag)).CombinedOutput()

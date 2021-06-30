@@ -1,8 +1,8 @@
-// Copyright (c) 2020 rookie-ninja
+// Copyright (c) 2021 rookie-ninja
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
-package rk_uninstall
+package uninstall
 
 import "github.com/urfave/cli/v2"
 
@@ -20,21 +20,20 @@ func Uninstall() *cli.Command {
 		},
 
 		Subcommands: []*cli.Command{
-			uninstallPkger(),
 			uninstallBuf(),
-			uninstallProtocGenGrpcGateway(),
-			uninstallSwag(),
+			uninstallCfssl(),
+			uninstallCfsslJson(),
 			uninstallGoCov(),
-			uninstallGolint(),
 			uninstallGolangCiLint(),
 			uninstallMockGen(),
+			uninstallPkger(),
 			uninstallProtobuf(),
 			uninstallProtocGenDoc(),
 			uninstallProtocGenGo(),
+			uninstallProtocGenGrpcGateway(),
 			uninstallProtocGenOpenApiV2(),
+			uninstallSwag(),
 			UninstallRkStdCommand(),
-			uninstallCfssl(),
-			uninstallCfsslJson(),
 		},
 	}
 

@@ -1,8 +1,8 @@
-// Copyright (c) 2020 rookie-ninja
+// Copyright (c) 2021 rookie-ninja
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
-package rk_uninstall
+package uninstall
 
 import (
 	"context"
@@ -30,16 +30,16 @@ func commandDefault(name string) *cli.Command {
 
 func beforeDefault(ctx *cli.Context) error {
 	name := strings.Join(strings.Split(ctx.Command.FullName(), " "), "/")
-	event := rk_common.CreateEvent(name)
+	event := common.CreateEvent(name)
 
 	// Inject event into context
-	ctx.Context = context.WithValue(ctx.Context, rk_common.EventKey, event)
+	ctx.Context = context.WithValue(ctx.Context, common.EventKey, event)
 
 	return nil
 }
 
 func afterDefault(ctx *cli.Context) error {
-	rk_common.Finish(rk_common.GetEventV2(ctx), nil)
+	common.Finish(common.GetEvent(ctx), nil)
 	return nil
 }
 
@@ -52,7 +52,7 @@ func checkPath(ctx *cli.Context) error {
 	path := strings.TrimSuffix(string(bytes), "\n")
 
 	color.White(fmt.Sprintf("- uninstall %s at path:%s", UninstallInfo.app, path))
-	rk_common.GetEventV2(ctx).AddPair("path", path)
+	common.GetEvent(ctx).AddPair("path", path)
 	return nil
 }
 

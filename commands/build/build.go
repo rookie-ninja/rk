@@ -1,69 +1,69 @@
-// Copyright (c) 2020 rookie-ninja
+// Copyright (c) 2021 rookie-ninja
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
-package rk_build
+package build
 
 import (
-	"github.com/fatih/color"
-	rk_query "github.com/rookie-ninja/rk-query"
+	"github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
+	"os"
 )
-
-type buildInfo struct {
-	Debug bool
-}
-
-var BuildInfo = buildInfo{}
 
 func Build() *cli.Command {
 	command := &cli.Command{
 		Name:      "build",
-		Usage:     "build project which contains build.yaml",
+		Usage:     "Build project which contains build.yaml",
 		UsageText: "rk build",
+		Before:    beforeDefault,
+		After:     afterDefault,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:        "debug",
-				Aliases:     []string{"d"},
-				Usage:       "debug mod",
-				Destination: &BuildInfo.Debug,
+				Name:    "debug",
+				Aliases: []string{"d"},
+				Usage:   "debug mod",
 			},
 		},
-		Action: BuildAction,
+		Action: buildAction,
 	}
 
 	return command
 }
 
-func BuildAction(ctx *cli.Context) error {
-	event := rk_common.GetEvent("build")
-
+func buildAction(ctx *cli.Context) error {
 	// 1: read build.yaml file
-	config := &rk_common.BootConfig{}
-	return DoBuildGo(config, event)
-}
-
-// a helper function
-func DoBuildGo(config *rk_common.BootConfig, event rk_query.Event) error {
-	color.Cyan("==> [Action] marshaling boot.yaml")
-	if err := rk_common.MarshalBuildConfig("build.yaml", config, event); err != nil {
-		event.AddPair("marshal-config", "fail")
-		return rk_common.Error(event, err)
+	if err := common.UnmarshalBootConfig("build.yaml", common.BuildConfig); err != nil {
+		return err
 	}
-	rk_common.Success()
+	chain := common.NewActionChain()
+	chain.Add("Clearing target folder", func(ctx *cli.Context) error {
+		// 0: Move to dir of where go.mod file exists
+		if err := os.Chdir(rkcommon.GetGoWd()); err != nil {
+			return err
+		}
+		return os.RemoveAll(common.BuildTarget)
+	}, false)
 
-	// 2: switch to find correct one
-	switch config.Build.Type {
+	// 2: Currently, support go only.
+	// Just run user command, copy and script actions only.
+	switch common.BuildConfig.Build.Type {
 	case "go":
-		if err := BuildGo(config, event); err != nil {
-			return nil
-		}
+		chain.Add("Execute user command before", ExecCommandsBefore, false)
+		chain.Add("Execute user script before", ExecScriptBefore, false)
+		chain.Add("Build go file", BuildGoFile, false)
+		chain.Add("Copy to target folder", CopyToTarget, false)
+		chain.Add("Generate rk meta from on local", WriteRkMetaFile, false)
+		chain.Add("Execute user script after", ExecScriptAfter, false)
+		chain.Add("Execute user command after", ExecCommandsAfter, false)
 	default:
-		if err := BuildDefault(config, event); err != nil {
-			return nil
-		}
+		chain.Add("Execute user command before", ExecCommandsBefore, false)
+		chain.Add("Execute user script before", ExecScriptBefore, false)
+		chain.Add("Copy to target folder", CopyToTarget, false)
+		chain.Add("Generate rk meta from on local", WriteRkMetaFile, false)
+		chain.Add("Execute user script after", ExecScriptAfter, false)
+		chain.Add("Execute user command after", ExecCommandsAfter, false)
 	}
 
-	return nil
+	return chain.Execute(ctx)
 }

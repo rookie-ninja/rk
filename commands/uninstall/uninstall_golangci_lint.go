@@ -1,8 +1,8 @@
-// Copyright (c) 2020 rookie-ninja
+// Copyright (c) 2021 rookie-ninja
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
-package rk_uninstall
+package uninstall
 
 import (
 	"fmt"
@@ -22,7 +22,7 @@ func uninstallGolangCiLint() *cli.Command {
 func golangCiLintAction(ctx *cli.Context) error {
 	UninstallInfo.app = "golangci-lint"
 
-	chain := rk_common.NewActionChain()
+	chain := common.NewActionChain()
 	chain.Add(fmt.Sprintf("Check path of %s", UninstallInfo.app), checkPath, false)
 	chain.Add("Validate uninstallation", validateUninstallation, false)
 	err := chain.Execute(ctx)

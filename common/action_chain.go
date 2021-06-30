@@ -1,4 +1,8 @@
-package rk_common
+// Copyright (c) 2021 rookie-ninja
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file.
+package common
 
 import (
 	"fmt"
@@ -39,10 +43,10 @@ func (c *actionChain) Execute(ctx *cli.Context) error {
 
 		if err := c.chain[i](ctx); err != nil {
 			if !c.ignoreError[i] {
-				event := GetEventV2(ctx)
+				event := GetEvent(ctx)
 				event.AddErr(err)
 				event.SetResCode("Failed")
-				return ErrorV2(err)
+				return Error(err)
 			}
 		}
 		color.Green("------------------------------------[OK]")

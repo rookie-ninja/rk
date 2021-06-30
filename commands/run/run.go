@@ -1,12 +1,13 @@
-// Copyright (c) 2020 rookie-ninja
+// Copyright (c) 2021 rookie-ninja
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
-package rk_run
+package run
 
 import (
 	"fmt"
-	rk_build "github.com/rookie-ninja/rk/commands/build"
+	"github.com/rookie-ninja/rk-common/common"
+	"github.com/rookie-ninja/rk/commands/build"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os"
@@ -18,54 +19,75 @@ import (
 func Run() *cli.Command {
 	command := &cli.Command{
 		Name:      "run",
-		Usage:     "run server build by rk build",
+		Usage:     "Run server build by rk build",
 		UsageText: "rk run",
-		Action:    RunAction,
+		Action:    runAction,
 	}
 
 	return command
 }
 
-func RunAction(ctx *cli.Context) error {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	event := rk_common.GetEvent("run")
-
-	// 1: build project first
-	event.StartTimer("build")
-	if err := rk_build.BuildAction(ctx); err != nil {
-		event.AddPair("build", "fail")
-		event.AddErr(err)
-		event.EndTimer("build")
-		return rk_common.Error(event, err)
+func runAction(ctx *cli.Context) error {
+	if err := common.UnmarshalBootConfig("build.yaml", common.BuildConfig); err != nil {
+		return err
 	}
-	event.EndTimer("build")
 
-	// 2: move to target folder and run binary
-	os.Chdir("target")
-	cmd := exec.Command("./bin/app")
+	chain := common.NewActionChain()
+	chain.Add("Clearing target folder", func(ctx *cli.Context) error {
+		// 0: Move to dir of where go.mod file exists
+		if err := os.Chdir(rkcommon.GetGoWd()); err != nil {
+			return err
+		}
+		return os.RemoveAll(common.BuildTarget)
+	}, false)
+
+	switch common.BuildConfig.Build.Type {
+	case "go":
+		chain.Add("Execute user command before", build.ExecCommandsBefore, false)
+		chain.Add("Execute user script before", build.ExecScriptBefore, false)
+		chain.Add("Build go file", build.BuildGoFile, false)
+		chain.Add("Copy to target folder", build.CopyToTarget, false)
+		chain.Add("Generate rk meta from on local", build.WriteRkMetaFile, false)
+		chain.Add("Execute user script after", build.ExecScriptAfter, false)
+		chain.Add("Execute user command after", build.ExecCommandsAfter, false)
+	default:
+		chain.Add("Execute user command before", build.ExecCommandsBefore, false)
+		chain.Add("Execute user script before", build.ExecScriptBefore, false)
+		chain.Add("Copy to target folder", build.CopyToTarget, false)
+		chain.Add("Generate rk meta from on local", build.WriteRkMetaFile, false)
+		chain.Add("Execute user script after", build.ExecScriptAfter, false)
+		chain.Add("Execute user command after", build.ExecCommandsAfter, false)
+	}
+
+	chain.Add("Run application", runBinary, false)
+
+	return chain.Execute(ctx)
+}
+
+func runBinary(ctx *cli.Context) error {
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	os.Chdir(common.BuildTarget)
+	cmd := exec.Command(fmt.Sprintf("./bin/%s", rkcommon.GetGoPkgName()))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
-		event.AddPair("docker-run", "fail")
-		rk_common.ClearTargetFolder("target", event)
-		rk_common.Error(event,
-			rk_common.NewScriptError(
-				fmt.Sprintf("failed to run docker image \n[err] %v", err)))
+		os.RemoveAll(common.BuildTarget)
 		return err
 	}
 
 	go func() {
-		<-sigs
+		<-sig
 		cmd.Process.Signal(syscall.SIGINT)
 	}()
 
 	cmd.Wait()
-
-	event.AddPair("run", "success")
-	rk_common.Success()
 
 	return nil
 }
