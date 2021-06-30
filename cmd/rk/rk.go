@@ -22,7 +22,7 @@ func main() {
 	app := &cli.App{
 		Name:        "rk",
 		Usage:       "rk utility command line tools",
-		Version:     "1.0.0",
+		Version:     "1.0.3",
 		Description: "rk is command line interface for utility tools during rk style software development lifecycle",
 		Commands: []*cli.Command{
 			build.Build(),
