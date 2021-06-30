@@ -26,7 +26,7 @@ RK command line tools. It contains couple of useful utility functionalities incl
 
 ## Installation
 ```shell script
-go get -u github.com/rookie-ninja/rk/cmd
+go get -u github.com/rookie-ninja/rk/cmd/rk
 ```
 
 ## Quick Start
