@@ -24,55 +24,61 @@ func UninstallRkStdCommand() *cli.Command {
 func UninstallRkStdAction(ctx *cli.Context) error {
 	color.Magenta("Uninstall rk style standard commands...")
 
-	// install protobuf
+	// Uninstall protobuf
 	color.Magenta("Uninstall protobuf")
 	if err := protobufAction(ctx); err != nil {
 		return err
 	}
 
-	// install protoc-gen-go
+	// Uninstall protoc-gen-go
 	color.Magenta("Uninstall protoc-gen-go")
 	if err := protocGenGoAction(ctx); err != nil {
 		return err
 	}
 
-	// install protoc-gen-grpc-gateway
+	// Uninstall protoc-gen-go-grpc
+	color.Magenta("Uninstall protoc-gen-go")
+	if err := protocGenGoGrpcAction(ctx); err != nil {
+		return err
+	}
+
+	// Uninstall protoc-gen-grpc-gateway
 	color.Magenta("Uninstall protoc-gen-grpc-gateway")
 	if err := protocGenGrpcGatewayAction(ctx); err != nil {
 		return err
 	}
 
-	// install protoc-gen-doc
+	// Uninstall protoc-gen-doc
 	color.Magenta("Uninstall protoc-gen-doc")
 	if err := protocGenDocAction(ctx); err != nil {
 		return err
 	}
 
-	// install protoc-gen-openapiv2
+	// Uninstall protoc-gen-openapiv2
 	color.Magenta("Uninstall protoc-gen-openapiv2")
 	if err := protocGenOpenApiV2Action(ctx); err != nil {
 		return err
 	}
 
-	// install golangci-lint
+	// Uninstall golangci-lint
 	color.Magenta("Uninstall golangci-lint")
 	if err := golangCiLintAction(ctx); err != nil {
 		return err
 	}
 
-	// install gocov
+	// Uninstall gocov
 	color.Magenta("Uninstall gocov")
 	if err := goCovAction(ctx); err != nil {
 		return err
 	}
 
-	// install swag
+	// Uninstall swag
 	color.Magenta("Uninstall swag")
 	if err := swagAction(ctx); err != nil {
 		return err
 	}
 
-	// install buf
+	// Uninstall buf
 	color.Magenta("Uninstall buf")
 	if err := bufAction(ctx); err != nil {
 		return err

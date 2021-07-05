@@ -30,6 +30,7 @@ func Uninstall() *cli.Command {
 			uninstallProtobuf(),
 			uninstallProtocGenDoc(),
 			uninstallProtocGenGo(),
+			uninstallProtocGenGoGrpc(),
 			uninstallProtocGenGrpcGateway(),
 			uninstallProtocGenOpenApiV2(),
 			uninstallSwag(),

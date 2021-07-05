@@ -72,11 +72,13 @@ COMMANDS:
    protobuf                 install protobuf on local machine
    protoc-gen-doc           install protoc-gen-doc on local machine
    protoc-gen-go            install protoc-gen-go on local machine
+   protoc-gen-go-grpc       install protoc-gen-go-grpc on local machine
    protoc-gen-grpc-gateway  install protoc-gen-grpc-gateway on local machine
    protoc-gen-openapiv2     install protoc-gen-openapiv2 on local machine
    swag                     install swag on local machine
    rk-std                   install rk standard environment on local machine
    help, h                  Shows a list of commands or help for one command
+
 ```
 
 ### rk uninstall
@@ -97,6 +99,7 @@ COMMANDS:
    protobuf                 uninstall protobuf from local machine
    protoc-gen-doc           uninstall protoc-gen-doc from local machine
    protoc-gen-go            uninstall protoc-gen-go from local machine
+   protoc-gen-go-grpc       uninstall protoc-gen-go-grpc from local machine
    protoc-gen-grpc-gateway  uninstall protoc-gen-grpc-gateway from local machine
    protoc-gen-openapiv2     uninstall protoc-gen-openapiv2 from local machine
    swag                     uninstall swag from local machine
