@@ -11,20 +11,20 @@ import (
 )
 
 // Install on local machine
-func installProtocGenGo() *cli.Command {
-	command := commandDefault("protoc-gen-go")
+func installProtocGenGoGrpc() *cli.Command {
+	command := commandDefault("protoc-gen-go-grpc")
 	command.Before = beforeDefault
-	command.Action = protocGenGoAction
+	command.Action = protocGenGoGrpcAction
 	command.After = afterDefault
 
 	return command
 }
 
-func protocGenGoAction(ctx *cli.Context) error {
-	GithubInfo.Owner = "protocolbuffers"
-	GithubInfo.Repo = "protobuf-go"
-	GithubInfo.GoGetUrl = "google.golang.org/protobuf/cmd/protoc-gen-go"
-	GithubInfo.ValidationCmd = exec.Command("which", "protoc-gen-go")
+func protocGenGoGrpcAction(ctx *cli.Context) error {
+	GithubInfo.Owner = "grpc"
+	GithubInfo.Repo = "grpc-go"
+	GithubInfo.GoGetUrl = "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
+	GithubInfo.ValidationCmd = exec.Command("which", "protoc-gen-go-grpc")
 
 	// List tags only
 	if hasListFlag(ctx) {

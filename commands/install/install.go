@@ -30,6 +30,7 @@ func Install() *cli.Command {
 			installProtobuf(),
 			installProtocGenDoc(),
 			installProtocGenGo(),
+			installProtocGenGoGrpc(),
 			installProtocGenGrpcGateway(),
 			installProtocGenOpenApiV2(),
 			installSwag(),

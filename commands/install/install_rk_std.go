@@ -36,6 +36,12 @@ func rkStdAction(ctx *cli.Context) error {
 		return err
 	}
 
+	// install protoc-gen-go-grpc
+	color.Magenta("Install protoc-gen-go-grpc")
+	if err := protocGenGoGrpcAction(ctx); err != nil {
+		return err
+	}
+
 	// install protoc-gen-grpc-gateway
 	color.Magenta("Install protoc-gen-grpc-gateway")
 	if err := protocGenGrpcGatewayAction(ctx); err != nil {
