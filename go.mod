@@ -12,9 +12,9 @@ require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/rookie-ninja/rk-common v1.0.9-0.20210630175957-602383c79681
-	github.com/rookie-ninja/rk-logger v1.0.10-0.20210527055114-0f92ffe223bd
-	github.com/rookie-ninja/rk-query v1.0.12-0.20210623102313-b61067b3abf5
+	github.com/rookie-ninja/rk-common v1.2.0
+	github.com/rookie-ninja/rk-logger v1.2.0
+	github.com/rookie-ninja/rk-query v1.2.0
 	github.com/schollz/progressbar/v3 v3.3.4
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect

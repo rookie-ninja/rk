@@ -1,9 +1,6 @@
 # Contributing
-
-We'd love your help make rk-query the very best structured logging library in Go!
-
-If you'd like to add new exported APIs, please [open an issue][open-issue]
-describing your proposal &mdash; discussing API changes ahead of time makes
+If you'd like to add new features, please [open an issue][open-issue]
+describing your proposal problem; discussing feature changes ahead of time makes
 pull request review much smoother. In your issue, pull request, and any other
 communications, please remember to treat your fellow contributors with
 respect! We take our [code of conduct](CODE_OF_CONDUCT.md) seriously.
@@ -22,13 +19,13 @@ respect! We take our [code of conduct](CODE_OF_CONDUCT.md) seriously.
 [Fork][fork], then clone the repository:
 
 ```
-git clone git@github.com:your_github_username/rookie-ninja/rk-cmd.git
-cd rk-cmd
-git remote add upstream https://github.com/rookie-ninja/rk-cmd.git
+git clone https://github.com/rookie-ninja/rk.git
+cd rk
+git remote add upstream https://github.com/rookie-ninja/rk.git
 git fetch upstream
 ```
 
-Install rk-cmd's dependencies:
+Install rk's dependencies:
 
 ```
 go mod tidy
@@ -54,7 +51,7 @@ git push origin cool_new_feature
 
 Then use the GitHub UI to open a pull request.
 
-At this point, you're waiting on us to review your changes. We *try* to respond
+At this point, you're waiting on us to review your changes. We **try** to respond
 to issues and pull requests within a few business days, and we may suggest some
 improvements or alternatives. Once your changes are approved, one of the
 project maintainers will merge them.
@@ -65,7 +62,7 @@ We're much more likely to approve your changes if you:
 * Write a [good commit message][commit-message].
 * Maintain backward compatibility.
 
-[fork]: https://github.com/rookie-ninja/rk-cmd/fork
-[open-issue]: https://github.com/rookie-ninja/rk-cmd/issues/new
-[cla]: https://cla-assistant.io/rookie-ninja/rk-cmd
+[fork]: https://github.com/rookie-ninja/rk/fork
+[open-issue]: https://github.com/rookie-ninja/rk/issues/new
+[cla]: https://cla-assistant.io/rookie-ninja/rk
 [commit-message]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
