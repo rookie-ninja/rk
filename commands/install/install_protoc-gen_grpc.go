@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 )
 
 // Install on local machine
@@ -24,7 +25,7 @@ func protocGenGoGrpcAction(ctx *cli.Context) error {
 	GithubInfo.Owner = "grpc"
 	GithubInfo.Repo = "grpc-go"
 	GithubInfo.GoGetUrl = "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
-	GithubInfo.ValidationCmd = exec.Command("which", "protoc-gen-go-grpc")
+	GithubInfo.ValidationCmd = exec.Command("which", path.Join(common.GetGoPathBin(), "protoc-gen-go-grpc"))
 
 	// List tags only
 	if hasListFlag(ctx) {

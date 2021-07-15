@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 	"runtime"
 	"strings"
 )
@@ -33,7 +34,7 @@ func protobufAction(ctx *cli.Context) error {
 		UserLocalBin,
 		UserLocalInclude,
 	}
-	GithubInfo.ValidationCmd = exec.Command("protoc", "--version")
+	GithubInfo.ValidationCmd = exec.Command(path.Join(UserLocalBin, "protoc"), "--version")
 	GithubInfo.DownloadFilter = func(url string) bool {
 		var sysArch string
 		if runtime.GOOS == "darwin" {

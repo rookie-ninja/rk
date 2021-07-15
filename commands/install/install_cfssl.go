@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 )
 
 // Install on local machine
@@ -24,7 +25,7 @@ func cfsslAction(ctx *cli.Context) error {
 	GithubInfo.Owner = "cloudflare"
 	GithubInfo.Repo = "cfssl"
 	GithubInfo.GoGetUrl = "github.com/cloudflare/cfssl/cmd/cfssl"
-	GithubInfo.ValidationCmd = exec.Command("cfssl", "version")
+	GithubInfo.ValidationCmd = exec.Command(path.Join(common.GetGoPathBin(), "cfssl"), "version")
 
 	// List tags only
 	if hasListFlag(ctx) {

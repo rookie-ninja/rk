@@ -177,3 +177,7 @@ func UnmarshalBootConfig(configFilePath string, config interface{}) error {
 
 	return nil
 }
+
+func GetGoPathBin() string {
+	return path.Join(rkcommon.GetGoEnv().GoPath, "bin")
+}

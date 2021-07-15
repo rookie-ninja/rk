@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 )
 
 // Install on local machine
@@ -24,7 +25,7 @@ func protocGenDocAction(ctx *cli.Context) error {
 	GithubInfo.Owner = "pseudomuto"
 	GithubInfo.Repo = "protoc-gen-doc"
 	GithubInfo.GoGetUrl = "github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc"
-	GithubInfo.ValidationCmd = exec.Command("protoc-gen-doc", "-version")
+	GithubInfo.ValidationCmd = exec.Command(path.Join(common.GetGoPathBin(), "protoc-gen-doc"), "-version")
 
 	// List tags only
 	if hasListFlag(ctx) {

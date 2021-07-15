@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 )
 
 // Install on local machine
@@ -24,7 +25,7 @@ func protocGenGoAction(ctx *cli.Context) error {
 	GithubInfo.Owner = "protocolbuffers"
 	GithubInfo.Repo = "protobuf-go"
 	GithubInfo.GoGetUrl = "google.golang.org/protobuf/cmd/protoc-gen-go"
-	GithubInfo.ValidationCmd = exec.Command("which", "protoc-gen-go")
+	GithubInfo.ValidationCmd = exec.Command("which", path.Join(common.GetGoPathBin(), "protoc-gen-go"))
 
 	// List tags only
 	if hasListFlag(ctx) {

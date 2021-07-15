@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 )
 
 // Install on local machine
@@ -24,7 +25,7 @@ func goCovAction(ctx *cli.Context) error {
 	GithubInfo.Owner = "axw"
 	GithubInfo.Repo = "gocov"
 	GithubInfo.GoGetUrl = "github.com/axw/gocov/gocov"
-	GithubInfo.ValidationCmd = exec.Command("which", "gocov")
+	GithubInfo.ValidationCmd = exec.Command("which", path.Join(common.GetGoPathBin(), "gocov"))
 
 	// List tags only
 	if hasListFlag(ctx) {

@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 )
 
 // Install on local machine
@@ -24,7 +25,7 @@ func swagAction(ctx *cli.Context) error {
 	GithubInfo.Owner = "swaggo"
 	GithubInfo.Repo = "swag"
 	GithubInfo.GoGetUrl = "github.com/swaggo/swag/cmd/swag"
-	GithubInfo.ValidationCmd = exec.Command("swag", "--version")
+	GithubInfo.ValidationCmd = exec.Command(path.Join(common.GetGoPathBin(), "swag"), "--version")
 
 	// List tags only
 	if hasListFlag(ctx) {

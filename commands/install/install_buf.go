@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 	"runtime"
 	"strings"
 )
@@ -32,7 +33,7 @@ func bufAction(ctx *cli.Context) error {
 	GithubInfo.DecompressedFilesDestination = []string{
 		UserLocalBin,
 	}
-	GithubInfo.ValidationCmd = exec.Command("buf", "--version")
+	GithubInfo.ValidationCmd = exec.Command(path.Join(UserLocalBin, "buf"), "--version")
 
 	// List tags only
 	if hasListFlag(ctx) {

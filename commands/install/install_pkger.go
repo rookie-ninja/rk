@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 )
 
 // Install on local machine
@@ -24,7 +25,7 @@ func pkgerAction(ctx *cli.Context) error {
 	GithubInfo.Owner = "markbates"
 	GithubInfo.Repo = "pkger"
 	GithubInfo.GoGetUrl = "github.com/markbates/pkger/cmd/pkger"
-	GithubInfo.ValidationCmd = exec.Command("which", "pkger")
+	GithubInfo.ValidationCmd = exec.Command("which", path.Join(common.GetGoPathBin(), "pkger"))
 
 	// List tags only
 	if hasListFlag(ctx) {

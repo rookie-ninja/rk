@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 )
 
 // Install on local machine
@@ -24,7 +25,7 @@ func protocGenOpenApiV2Action(ctx *cli.Context) error {
 	GithubInfo.Owner = "grpc-ecosystem"
 	GithubInfo.Repo = "grpc-gateway"
 	GithubInfo.GoGetUrl = "github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2"
-	GithubInfo.ValidationCmd = exec.Command("protoc-gen-openapiv2", "--version")
+	GithubInfo.ValidationCmd = exec.Command(path.Join(common.GetGoPathBin(), "protoc-gen-openapiv2"), "--version")
 
 	// List tags only
 	if hasListFlag(ctx) {

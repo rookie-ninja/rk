@@ -18,6 +18,7 @@ require (
 	github.com/schollz/progressbar/v3 v3.3.4
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/swaggo/swag v1.7.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0

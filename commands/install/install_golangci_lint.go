@@ -8,6 +8,7 @@ import (
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
+	"path"
 )
 
 // Install on local machine
@@ -23,7 +24,7 @@ func golangCiLintAction(ctx *cli.Context) error {
 	GithubInfo.Owner = "golangci"
 	GithubInfo.Repo = "golangci-lint"
 	GithubInfo.GoGetUrl = "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	GithubInfo.ValidationCmd = exec.Command("golangci-lint", "--version")
+	GithubInfo.ValidationCmd = exec.Command(path.Join(common.GetGoPathBin(), "golangci-lint"), "--version")
 
 	// List tags only
 	if hasListFlag(ctx) {
