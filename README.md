@@ -1,5 +1,8 @@
 # rk
-RK command line tools. It contains couple of useful utility functionalities including downloading dependencies, build go project etc.
+[![build](https://github.com/rookie-ninja/rk/actions/workflows/ci.yml/badge.svg)](https://github.com/rookie-ninja/rk/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+RK command line tools. It contains a couple of useful utility functionalities including downloading dependencies, build go project etc.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -191,8 +194,6 @@ We encourage and support an active, healthy community of contributors &mdash;
 including you! Details are in the [contribution guide](CONTRIBUTING.md) and
 the [code of conduct](CODE_OF_CONDUCT.md). The rk maintainers keep an eye on
 issues and pull requests, but you can also report any negative conduct to
-dongxuny@gmail.com. That email list is a private, safe space; even the zap
-maintainers don't have access, so don't hesitate to hold us to a high
-standard.
+lark@rkdev.info.
 
-Released under the [MIT License](LICENSE).
+Released under the [Apache 2.0 License](LICENSE).
