@@ -1,5 +1,6 @@
 # rk
 [![build](https://github.com/rookie-ninja/rk/actions/workflows/ci.yml/badge.svg)](https://github.com/rookie-ninja/rk/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rookie-ninja/rk)](https://goreportcard.com/report/github.com/rookie-ninja/rk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 RK command line tools. It contains a couple of useful utility functionalities including downloading dependencies, build go project etc.
