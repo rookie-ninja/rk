@@ -5,6 +5,7 @@
 package build
 
 import (
+	"errors"
 	"github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
@@ -38,9 +39,9 @@ func buildAction(ctx *cli.Context) error {
 	}
 	chain := common.NewActionChain()
 	chain.Add("Clearing target folder", func(ctx *cli.Context) error {
-		// 0: Move to dir of where go.mod file exists
-		if err := os.Chdir(rkcommon.GetGoWd()); err != nil {
-			return err
+		// 0: Not dir of where go.mod file exists
+		if !rkcommon.FileExists("go.mod") {
+			return errors.New("not a go directory, failed to lookup go.mod file")
 		}
 		return os.RemoveAll(common.BuildTarget)
 	}, false)

@@ -6,6 +6,7 @@ package build
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/ghodss/yaml"
@@ -172,7 +173,7 @@ func ExecScriptAfter(ctx *cli.Context) error {
 }
 
 func WriteRkMetaFile(ctx *cli.Context) error {
-	meta := rkcommon.GetRkMetaFromCmd()
+	meta := common.GetRkMetaFromCmd()
 
 	// 5: Write to .rk/git.yaml file
 	color.White("- Write files to %s", path.Join(common.BuildTarget, rkcommon.RkMetaFilePath))
@@ -191,9 +192,9 @@ func BuildGoFile(ctx *cli.Context) error {
 	// Create .rk folder first
 	os.MkdirAll(path.Join(common.BuildTarget, path.Dir(rkcommon.RkMetaFilePath)), os.ModePerm)
 
-	// 0: Move to dir of where go.mod file exists
-	if err := os.Chdir(rkcommon.GetGoWd()); err != nil {
-		return err
+	// 0: Not dir of where go.mod file exists
+	if !rkcommon.FileExists("go.mod") {
+		return errors.New("not a go directory, failed to lookup go.mod file")
 	}
 
 	// 1: create directory named as target and sub folders
@@ -224,7 +225,7 @@ func BuildGoFile(ctx *cli.Context) error {
 	args := []string{
 		"build",
 		"-o",
-		fmt.Sprintf("target/bin/%s", rkcommon.GetGoPkgName()),
+		fmt.Sprintf("target/bin/%s", common.TargetPkgName),
 	}
 
 	// append user provided args
