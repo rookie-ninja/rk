@@ -5,6 +5,7 @@
 package pack
 
 import (
+	"errors"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/rookie-ninja/rk-common/common"
@@ -33,9 +34,9 @@ func packAction(ctx *cli.Context) error {
 	}
 	chain := common.NewActionChain()
 	chain.Add("Clearing target folder", func(ctx *cli.Context) error {
-		// 0: Move to dir of where go.mod file exists
-		if err := os.Chdir(rkcommon.GetGoWd()); err != nil {
-			return err
+		// 0: Not dir of where go.mod file exists
+		if !rkcommon.FileExists("go.mod") {
+			return errors.New("not a go directory, failed to lookup go.mod file")
 		}
 		return os.RemoveAll(common.BuildTarget)
 	}, false)
@@ -64,7 +65,7 @@ func packAction(ctx *cli.Context) error {
 }
 
 func compressTarget(ctx *cli.Context) error {
-	meta := rkcommon.GetRkMetaFromCmd()
+	meta := common.GetRkMetaFromCmd()
 	packName := fmt.Sprintf("%s-%s.tar.gz", meta.Name, meta.Version)
 
 	args := []string{

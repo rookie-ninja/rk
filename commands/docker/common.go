@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"github.com/fatih/color"
-	rkcommon "github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
@@ -80,7 +79,7 @@ func runDockerImage(ctx *cli.Context) error {
 }
 
 func buildDockerImage(ctx *cli.Context) error {
-	meta := rkcommon.GetRkMetaFromCmd()
+	meta := common.GetRkMetaFromCmd()
 
 	if len(common.BuildConfig.Docker.Build.Registry) < 1 {
 		common.BuildConfig.Docker.Build.Registry = meta.Name
