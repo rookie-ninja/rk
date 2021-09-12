@@ -20,7 +20,6 @@ import (
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"go/build"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -28,7 +27,9 @@ import (
 )
 
 const (
+	// Event key in context
 	EventKey    = "rkEvent"
+	// The folder where build result will be moved to
 	BuildTarget = "target"
 )
 
@@ -64,12 +65,30 @@ var (
 
 	logger        *zap.Logger
 	factory       *rkquery.EventFactory
-	BuildConfig   = &BootConfig{}
+	// BuildConfig match yaml config of build.yaml
+	BuildConfig   = &BootConfigForBuild{}
+	// TargetPkgName the compiled target name
 	TargetPkgName = getPkgName()
+	// TargetGitInfo git information while building
 	TargetGitInfo = getGitInfo()
 )
 
-type BootConfig struct {
+// BootConfigForBuild match yaml config of build.yaml
+// 1: Build.Type: Required, the type of programming language
+// 2: Build.Main: Optional, path of main.go file, default is current working directory
+// 3: Build.GOOS: Optional, specify GOOS, default from current go env
+// 4: Build.GOARCH: Optional, specify GOARCH, default from current go env
+// 5: Build.Args: Optional, specify arguments while run build
+// 6: Build.Copy: Optional, the files and folders need to copy to target folder
+// 7: Build.Commands.Before: Optional, commands needs to run before build
+// 8: Build.Commands.After: Optional, commands needs to run after build
+// 9: Build.Scripts.Before: Optional, scripts needs to run before build
+// 10: Build.Scripts.After: Optional, scripts needs to run after build
+// 11: Docker.Build.Registry: Optional, docker registry while building docker image
+// 12: Docker.Build.Tag: Optional, docker tag while building docker image
+// 13: Docker.Build.Args: Optional, arguments needs to pass while building docker image
+// 14: Docker.Build.Run.Args: Optional, arguments needs to pass to docker while running docker container
+type BootConfigForBuild struct {
 	Build struct {
 		Type     string   `yaml:"type"`
 		Main     string   `yaml:"main"`
@@ -99,20 +118,26 @@ type BootConfig struct {
 }
 
 func init() {
+	// Get user home directory
 	userHomeDir, _ := os.UserHomeDir()
+	// rk cli home directory which is ~/.rk
 	rkDir := path.Join(userHomeDir, ".rk/logs")
+	// Make directory of ~/.rk/logs
 	if err := os.MkdirAll(rkDir, os.ModePerm); err != nil {
 		color.Yellow("Failed to create rk temp dir.")
 		color.Red(err.Error())
 	}
-
+	// ZapLogger config which replace the output folder with ~/.rk/logs
 	bytes := []byte(fmt.Sprintf(confStr, path.Join(rkDir, "rk.log")))
+	// ZapLogger
 	logger, _, _ = rklogger.NewZapLoggerWithBytes(bytes, rklogger.JSON)
+	// Create EventFactory
 	factory = rkquery.NewEventFactory(
 		rkquery.WithAppName("rk-cmd"),
 		rkquery.WithZapLogger(logger))
 }
 
+// GetEvent Retrieve event in context
 func GetEvent(ctx *cli.Context) rkquery.Event {
 	if v := ctx.Context.Value(EventKey); v != nil {
 		if event, ok := v.(rkquery.Event); ok {
@@ -123,6 +148,7 @@ func GetEvent(ctx *cli.Context) rkquery.Event {
 	return factory.CreateEventNoop()
 }
 
+// CreateEvent Create an event with operation name
 func CreateEvent(op string) rkquery.Event {
 	event := factory.CreateEvent()
 	event.SetOperation(op)
@@ -130,6 +156,7 @@ func CreateEvent(op string) rkquery.Event {
 	return event
 }
 
+// Finish current event
 func Finish(event rkquery.Event, err error) {
 	if err != nil {
 		event.AddErr(err)
@@ -142,6 +169,7 @@ func Finish(event rkquery.Event, err error) {
 	event.Finish()
 }
 
+// Error Print error with red color of text
 func Error(err error) error {
 	if err != nil {
 		color.Red("[Error] %s", err.Error())
@@ -152,31 +180,19 @@ func Error(err error) error {
 	return err
 }
 
-func ClearTargetFolder(path string, event rkquery.Event) {
-	// just try our best to remove it
-	if err := os.RemoveAll(path); err != nil {
-		color.Red(err.Error())
-		event.AddPair("clear-target", "fail")
-	}
-
-	event.AddPair("clear-target", "success")
-}
-
-func ClearDir(path string) {
-	// just try our best to remove it
-	if err := os.RemoveAll(path); err != nil {
-		color.Red(err.Error())
-	}
-}
-
+// UnmarshalBootConfig Read build.yaml and unmarshal it into config
 func UnmarshalBootConfig(configFilePath string, config interface{}) error {
+	if config == nil {
+		return errors.New("Nil config provided")
+	}
+
 	if !path.IsAbs(configFilePath) {
 		// Ignore error
 		wd, _ := os.Getwd()
 		configFilePath = path.Join(wd, configFilePath)
 	}
 
-	bytes := TryReadFile(configFilePath)
+	bytes := rkcommon.TryReadFile(configFilePath)
 	if len(bytes) < 1 {
 		return errors.New(fmt.Sprintf("Failed to read build.yaml file from path:%s", configFilePath))
 	}
@@ -188,28 +204,9 @@ func UnmarshalBootConfig(configFilePath string, config interface{}) error {
 	return nil
 }
 
+// GetGoPathBin Get $GOPATH/bin path on local machine
 func GetGoPathBin() string {
 	return path.Join(build.Default.GOPATH, "bin")
-}
-
-// TryReadFile reads files with provided path, use working directory if given path is relative path.
-// Ignoring error while reading.
-func TryReadFile(filePath string) []byte {
-	if len(filePath) < 1 {
-		return make([]byte, 0)
-	}
-
-	if !path.IsAbs(filePath) {
-		// Ignore error
-		wd, _ := os.Getwd()
-		filePath = path.Join(wd, filePath)
-	}
-
-	if bytes, err := ioutil.ReadFile(filePath); err != nil {
-		return bytes
-	} else {
-		return bytes
-	}
 }
 
 // getPkgName will try best to retrieve package name by bellow priority.
@@ -233,6 +230,7 @@ func getPkgName() string {
 	return ""
 }
 
+// Get git information from .git folder if current package is a git package
 func getGitInfo() *rkcommon.Git {
 	res := &rkcommon.Git{
 		Commit: &rkcommon.Commit{
