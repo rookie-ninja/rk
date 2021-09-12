@@ -16,7 +16,7 @@ doctoc:
 .PHONY: build
 build:
 	@echo "[build] Building to local..."
-	@go build -o $GOPATH/bin/rk cmd/rk/rk.go
+	@go build -o ${GOPATH}/bin/rk cmd/rk/rk.go
 	@echo "------------------------------------[Done]"
 
 .PHONY: pkger
@@ -24,4 +24,3 @@ pkger:
 	@echo "[pkger] Running pkger..."
 	@pkger -o commands/pkg
 	@echo "------------------------------------[Done]"
-

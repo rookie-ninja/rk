@@ -19,15 +19,7 @@ func getPkgNameFromFlags(ctx *cli.Context) string {
 }
 
 func getPkgDestinationFromFlags(ctx *cli.Context) string {
-	//wd, _ := os.Getwd()
-	dest := ctx.Value("destination").(string)
-	//if strings.HasPrefix(dest,".") {
-	//	dest = path.Join(wd, strings.TrimPrefix(dest, "."))
-	//} else if !path.IsAbs(dest) {
-	//	dest = path.Join(wd, dest)
-	//}
-
-	return dest
+	return ctx.Value("destination").(string)
 }
 
 func getPkgFromRemoteSourceFromFlags(ctx *cli.Context) bool {
