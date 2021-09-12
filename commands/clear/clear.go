@@ -1,17 +1,17 @@
 // Copyright (c) 2021 rookie-ninja
 //
-// Use of this source code is governed by an MIT-style
+// Use of this source code is governed by an Apache-style
 // license that can be found in the LICENSE file.
+
 package clear
 
 import (
-	"errors"
-	rkcommon "github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os"
 )
 
+// Clear remove target/ folder
 func Clear() *cli.Command {
 	command := &cli.Command{
 		Name:      "clear",
@@ -23,13 +23,10 @@ func Clear() *cli.Command {
 	return command
 }
 
+// Clear target/ folder
 func clearAction(ctx *cli.Context) error {
 	chain := common.NewActionChain()
 	chain.Add("Clearing target folder", func(ctx *cli.Context) error {
-		// 0: Not dir of where go.mod file exists
-		if !rkcommon.FileExists("go.mod") {
-			return errors.New("not a go directory, failed to lookup go.mod file")
-		}
 		return os.RemoveAll(common.BuildTarget)
 	}, false)
 
