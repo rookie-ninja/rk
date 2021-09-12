@@ -1,0 +1,6 @@
+# Please refer https://docs.buf.build/introduction for details
+version: v1beta1
+name: github.com/rk-dev/rk-boot
+build:
+  roots:
+    - api

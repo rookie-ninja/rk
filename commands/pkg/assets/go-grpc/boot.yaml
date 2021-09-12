@@ -1,0 +1,13 @@
+---
+# Please refer https://github.com/rookie-ninja/rk-boot for details
+grpc:
+  - name: greeter                   # Required, Name of grpc entry
+    port: 8080                      # Required, Port of grpc entry
+    commonService:
+      enabled: true                 # Optional, Enable common service, default: false
+    sw:
+      enabled: true                 # Optional, Enable swagger, default: false
+      jsonPath: "api/gen/v1"        # Optional, The directory where swagger json file located, default: ""
+    tv:
+      enabled: true                 # Optional, Enable Rk TV, default: false
+

@@ -1,0 +1,19 @@
+---
+# Please refer https://github.com/rookie-ninja/rk#buildyaml for details
+build:
+  type: go                           # Optional, default:go
+  copy: ["docs"]                     # Optional, default: [], directories or files need to copy to [target] folder
+  commands:
+    before:
+      - "swag init --parseInternal --propertyStrategy camelcase"
+#   after: []                        # Optional, default: [], commands would be invoked after [go build] command locally
+#  scripts:
+#    before: []                      # Optional, default: [], scripts would be executed before [go build] command locally
+#    after: []                       # Optional, default: [], scripts would be executed after [go build] command locally
+docker:
+#  build:
+#    registry: ""                    # Optional, default: [package name]
+#    tag: ""                         # Optional, default: [current git tag or branch-latestCommit]
+#    args: [""]                      # Optional, default: "", docker args which will be attached to [docker build] command
+  run:
+    args: ["-p", "8080:8080"]        # Optional, default: "", docker args which will be attached to [docker run] command

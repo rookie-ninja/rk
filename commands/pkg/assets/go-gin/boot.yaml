@@ -1,0 +1,12 @@
+---
+# Please refer https://github.com/rookie-ninja/rk-boot for details
+gin:
+  - name: greeter         # Required, Name of gin entry
+    port: 8080            # Required, Port of gin entry
+    commonService:
+      enabled: true       # Optional, Enable common service, default: false
+    sw:
+      enabled: true       # Optional, Enable swagger, default: false
+      jsonPath: "docs"    # Optional, The directory where swagger json file located, default: ""
+    tv:
+      enabled:  true      # Optional, Enable Rk TV, default: false

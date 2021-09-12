@@ -1,7 +1,8 @@
 // Copyright (c) 2021 rookie-ninja
 //
-// Use of this source code is governed by an MIT-style
+// Use of this source code is governed by an Apache-style
 // license that can be found in the LICENSE file.
+
 package common
 
 import (
@@ -13,7 +14,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/pkg/errors"
 	"github.com/rogpeppe/go-internal/modfile"
-	rkcommon "github.com/rookie-ninja/rk-common/common"
+	"github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk-logger"
 	"github.com/rookie-ninja/rk-query"
 	"github.com/urfave/cli/v2"

@@ -7,14 +7,16 @@ require (
 	github.com/fatih/color v1.12.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/google/go-github/v32 v32.1.0
+	github.com/markbates/pkger v0.17.1
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.3.0
-	github.com/rookie-ninja/rk-common v1.2.0
-	github.com/rookie-ninja/rk-logger v1.2.0
-	github.com/rookie-ninja/rk-query v1.2.0
+	github.com/rookie-ninja/rk-common v1.2.2
+	github.com/rookie-ninja/rk-logger v1.2.3
+	github.com/rookie-ninja/rk-query v1.2.4
 	github.com/schollz/progressbar/v3 v3.3.4
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/urfave/cli/v2 v2.3.0

@@ -1,0 +1,43 @@
+definitions:
+  api.GreeterResponse:
+    properties:
+      message:
+        type: string
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a greeter service with rk-boot.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: RK Swagger for Gin
+  version: "1.0"
+paths:
+  /v1/greeter:
+    get:
+      operationId: "1"
+      parameters:
+      - description: Input name
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.GreeterResponse'
+      summary: Greeter service
+schemes:
+- http
+- https
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
