@@ -11,6 +11,7 @@ import (
 	"github.com/rookie-ninja/rk/commands/docker"
 	"github.com/rookie-ninja/rk/commands/install"
 	"github.com/rookie-ninja/rk/commands/pack"
+	"github.com/rookie-ninja/rk/commands/pkg"
 	"github.com/rookie-ninja/rk/commands/run"
 	"github.com/rookie-ninja/rk/commands/uninstall"
 	"github.com/rookie-ninja/rk/commands/ut"
@@ -31,6 +32,7 @@ func main() {
 			install.Install(),
 			uninstall.Uninstall(),
 			pack.Pack(),
+			pkg.Pkg(),
 			run.Run(),
 			ut.UT(),
 		},
