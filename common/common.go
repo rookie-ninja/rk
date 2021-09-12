@@ -28,7 +28,7 @@ import (
 
 const (
 	// Event key in context
-	EventKey    = "rkEvent"
+	EventKey = "rkEvent"
 	// The folder where build result will be moved to
 	BuildTarget = "target"
 )
@@ -63,10 +63,10 @@ var (
     "compress": true
    }`
 
-	logger        *zap.Logger
-	factory       *rkquery.EventFactory
+	logger  *zap.Logger
+	factory *rkquery.EventFactory
 	// BuildConfig match yaml config of build.yaml
-	BuildConfig   = &BootConfigForBuild{}
+	BuildConfig = &BootConfigForBuild{}
 	// TargetPkgName the compiled target name
 	TargetPkgName = getPkgName()
 	// TargetGitInfo git information while building

@@ -80,7 +80,7 @@ func pkgDescAction(ctx *cli.Context) error {
 			for _, v := range descMap {
 				color.White(v)
 			}
-		} else if v, ok := descMap[pkgType]; ok{
+		} else if v, ok := descMap[pkgType]; ok {
 			color.White(v)
 		} else {
 			color.Yellow("Unknown package type [%s]", pkgType)

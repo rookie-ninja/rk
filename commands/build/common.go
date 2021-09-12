@@ -1,7 +1,8 @@
 // Copyright (c) 2021 rookie-ninja
 //
-// Use of this source code is governed by an MIT-style
+// Use of this source code is governed by an Apache-style
 // license that can be found in the LICENSE file.
+
 package build
 
 import (
@@ -28,6 +29,7 @@ var (
 	}
 )
 
+// Create an event and inject into context
 func beforeDefault(ctx *cli.Context) error {
 	name := strings.Join(strings.Split(ctx.Command.FullName(), " "), "/")
 	event := common.CreateEvent(name)
@@ -39,55 +41,28 @@ func beforeDefault(ctx *cli.Context) error {
 	return nil
 }
 
+// Extract event and finish event
 func afterDefault(ctx *cli.Context) error {
 	common.Finish(common.GetEvent(ctx), nil)
 	return nil
 }
 
+// ExecCommandsBefore Execute user provided commands before building
 func ExecCommandsBefore(ctx *cli.Context) error {
-	if len(common.BuildConfig.Build.Commands.Before) < 1 {
-		color.White("- No user commands found!")
-		return nil
-	}
-
-	commands := common.BuildConfig.Build.Commands.Before
-
-	for i := range commands {
-		cmd := commands[i]
-		tokens := strings.Split(cmd, " ")
-		if len(tokens) < 1 || len(tokens[0]) < 1 {
-			continue
-		}
-
-		color.White(fmt.Sprintf("- %s", cmd))
-
-		if len(tokens) > 1 {
-			bytes, err := exec.Command(tokens[0], tokens[1:]...).CombinedOutput()
-			if err != nil {
-				os.RemoveAll(common.BuildTarget)
-				return err
-			}
-			color.White(string(bytes))
-		} else {
-			bytes, err := exec.Command(tokens[0]).CombinedOutput()
-			if err != nil {
-				os.RemoveAll(common.BuildTarget)
-				return err
-			}
-			color.White(string(bytes))
-		}
-	}
-
-	return nil
+	return execCommands(common.BuildConfig.Build.Commands.Before)
 }
 
+// ExecCommandsAfter Execute user provided commands after building
 func ExecCommandsAfter(ctx *cli.Context) error {
-	if len(common.BuildConfig.Build.Commands.After) < 1 {
+	return execCommands(common.BuildConfig.Build.Commands.After)
+}
+
+// Helper function to exec commands
+func execCommands(commands []string) error {
+	if len(commands) < 1 {
 		color.White("- No user commands found!")
 		return nil
 	}
-
-	commands := common.BuildConfig.Build.Commands.After
 
 	for i := range commands {
 		cmd := commands[i]
@@ -118,40 +93,21 @@ func ExecCommandsAfter(ctx *cli.Context) error {
 	return nil
 }
 
+// ExecScriptBefore Execute user provided scripts before building
 func ExecScriptBefore(ctx *cli.Context) error {
-	if len(common.BuildConfig.Build.Scripts.Before) < 1 {
-		color.White("- No user scripts found!")
-		return nil
-	}
-
-	scripts := common.BuildConfig.Build.Scripts.Before
-
-	for i := range scripts {
-		script := scripts[i]
-
-		if len(script) < 1 {
-			continue
-		}
-
-		color.White(fmt.Sprintf("- %s", script))
-		bytes, err := exec.Command("sh", script).CombinedOutput()
-		if err != nil {
-			os.RemoveAll(common.BuildTarget)
-			return err
-		}
-		color.White(string(bytes))
-	}
-
-	return nil
+	return execScripts(common.BuildConfig.Build.Scripts.Before)
 }
 
+// ExecScriptAfter Execute user provided scripts after building
 func ExecScriptAfter(ctx *cli.Context) error {
-	if len(common.BuildConfig.Build.Scripts.After) < 1 {
+	return execScripts(common.BuildConfig.Build.Scripts.After)
+}
+
+func execScripts(scripts []string) error {
+	if len(scripts) < 1 {
 		color.White("- No user scripts found!")
 		return nil
 	}
-
-	scripts := common.BuildConfig.Build.Scripts.After
 
 	for i := range scripts {
 		script := scripts[i]
@@ -172,6 +128,7 @@ func ExecScriptAfter(ctx *cli.Context) error {
 	return nil
 }
 
+// WriteRkMetaFile Write RK meta into .rk folder
 func WriteRkMetaFile(ctx *cli.Context) error {
 	meta := common.GetRkMetaFromCmd()
 
@@ -188,6 +145,7 @@ func WriteRkMetaFile(ctx *cli.Context) error {
 	return nil
 }
 
+// BuildGoFile Build go file
 func BuildGoFile(ctx *cli.Context) error {
 	// Create .rk folder first
 	os.MkdirAll(path.Join(common.BuildTarget, path.Dir(rkcommon.RkMetaFilePath)), os.ModePerm)
@@ -252,20 +210,18 @@ func BuildGoFile(ctx *cli.Context) error {
 	}
 
 	// 6: copy boot.yaml file to target folder
-	if err := CopyCommand("boot.yaml", common.BuildTarget); err != nil {
-		os.RemoveAll(common.BuildTarget)
-		return err
-	}
+	copyCommand("boot.yaml", common.BuildTarget)
 
 	// 7: copy README.md, go.mod, LICENSE and unit test coverage report file .rk dir if exist
-	CopyCommand("README.md", path.Join(common.BuildTarget, rkcommon.RkReadmeFilePath))
-	CopyCommand("LICENSE", path.Join(common.BuildTarget, rkcommon.RkLicenseFilePath))
-	CopyCommand("go.mod", path.Join(common.BuildTarget, rkcommon.RkDepFilePath))
-	CopyCommand(path.Base(rkcommon.RkUtHtmlFilePath), path.Join(common.BuildTarget, rkcommon.RkUtHtmlFilePath))
+	copyCommand("README.md", path.Join(common.BuildTarget, rkcommon.RkReadmeFilePath))
+	copyCommand("LICENSE", path.Join(common.BuildTarget, rkcommon.RkLicenseFilePath))
+	copyCommand("go.mod", path.Join(common.BuildTarget, rkcommon.RkDepFilePath))
+	copyCommand(path.Base(rkcommon.RkUtHtmlFilePath), path.Join(common.BuildTarget, rkcommon.RkUtHtmlFilePath))
 
 	return nil
 }
 
+// CopyToTarget Copy folders to target folder
 func CopyToTarget(ctx *cli.Context) error {
 	if len(common.BuildConfig.Build.Copy) < 1 {
 		color.White("- No folders need to copy!")
@@ -279,7 +235,7 @@ func CopyToTarget(ctx *cli.Context) error {
 			continue
 		}
 
-		if err := CopyCommand(folder, common.BuildTarget+"/"); err != nil {
+		if err := copyCommand(folder, common.BuildTarget+"/"); err != nil {
 			os.RemoveAll(common.BuildTarget)
 			return err
 		}
@@ -288,7 +244,8 @@ func CopyToTarget(ctx *cli.Context) error {
 	return nil
 }
 
-func CopyCommand(src string, dst string) error {
+// CopyCommand Copy folders to target folder
+func copyCommand(src string, dst string) error {
 	os.MkdirAll(path.Dir(dst), os.ModePerm)
 
 	args := []string{
