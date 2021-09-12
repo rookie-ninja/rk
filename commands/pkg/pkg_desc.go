@@ -70,13 +70,20 @@ func PkgDesc() *cli.Command {
 func pkgDescAction(ctx *cli.Context) error {
 	pkgType := getPkgTypeFromFlags(ctx)
 	chain := common.NewActionChain()
-	chain.Add(fmt.Sprintf("Describe package %s", pkgType), func(context *cli.Context) error {
-		if pkgType == "all" {
+
+	pkgTypeForTitle := pkgType
+	if len(pkgType) < 1 {
+		pkgTypeForTitle = "for all"
+	}
+	chain.Add(fmt.Sprintf("Describe package %s", pkgTypeForTitle), func(context *cli.Context) error {
+		if len(pkgType) < 1 {
 			for _, v := range descMap {
 				color.White(v)
 			}
+		} else if v, ok := descMap[pkgType]; ok{
+			color.White(v)
 		} else {
-			color.White(descMap[pkgType])
+			color.Yellow("Unknown package type [%s]", pkgType)
 		}
 		return nil
 	}, true)
