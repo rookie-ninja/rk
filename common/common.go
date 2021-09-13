@@ -6,6 +6,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/ghodss/yaml"
@@ -316,4 +317,22 @@ func GetRkMetaFromCmd() *rkcommon.RkMeta {
 	}
 
 	return meta
+}
+
+// Create an event and inject into context
+func CommandBefore(ctx *cli.Context) error {
+	name := strings.Join(strings.Split(ctx.Command.FullName(), " "), "/")
+	event := CreateEvent(name)
+	event.AddPayloads(zap.Strings("flags", ctx.FlagNames()))
+
+	// Inject event into context
+	ctx.Context = context.WithValue(ctx.Context, EventKey, event)
+
+	return nil
+}
+
+// Extract event and finish event
+func CommandAfter(ctx *cli.Context) error {
+	Finish(GetEvent(ctx), nil)
+	return nil
 }

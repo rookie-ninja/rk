@@ -1,29 +1,35 @@
 // Copyright (c) 2021 rookie-ninja
 //
-// Use of this source code is governed by an MIT-style
+// Use of this source code is governed by an Apache-style
 // license that can be found in the LICENSE file.
+
 package docker
 
 import (
-	"errors"
-	"github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk/commands/build"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os"
 )
 
+// Create docker run command
 func dockerRun() *cli.Command {
 	command := &cli.Command{
 		Name:      "run",
 		Usage:     "run a docker image built with rk docker build",
 		UsageText: "rk docker run",
+		Before:    common.CommandBefore,
+		After:     common.CommandAfter,
 		Action:    runAction,
 	}
 
 	return command
 }
 
+// Follow bellow sequence.
+// 1: Compile source codes
+// 2: Build docker image
+// 3: Run docker image
 func runAction(ctx *cli.Context) error {
 	if err := common.UnmarshalBootConfig("build.yaml", common.BuildConfig); err != nil {
 		return err
@@ -34,10 +40,6 @@ func runAction(ctx *cli.Context) error {
 	chain := common.NewActionChain()
 	chain.Add("Validate docker environment", validateDockerCommand, false)
 	chain.Add("Clearing target folder", func(ctx *cli.Context) error {
-		// 0: Not dir of where go.mod file exists
-		if !rkcommon.FileExists("go.mod") {
-			return errors.New("not a go directory, failed to lookup go.mod file")
-		}
 		return os.RemoveAll(common.BuildTarget)
 	}, false)
 

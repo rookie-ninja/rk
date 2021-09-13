@@ -30,3 +30,5 @@ test:
 	@echo "[test] Running go test..."
 	@go test ./... -coverprofile coverage.txt 2>&1
 	@go tool cover -html=coverage.txt
+	@echo "------------------------------------[Done]"
+

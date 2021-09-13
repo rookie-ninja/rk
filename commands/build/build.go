@@ -17,8 +17,8 @@ func Build() *cli.Command {
 		Name:      "build",
 		Usage:     "Build project which contains build.yaml",
 		UsageText: "rk build",
-		Before:    beforeDefault,
-		After:     afterDefault,
+		Before:    common.CommandBefore,
+		After:     common.CommandAfter,
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:    "debug",

@@ -8,6 +8,7 @@ package common
 import (
 	"context"
 	"errors"
+	"flag"
 	"github.com/rookie-ninja/rk-query"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli/v2"
@@ -108,6 +109,23 @@ func TestGetRkMetaFromCmd(t *testing.T) {
 	defer assertNotPanic(t)
 
 	assert.NotNil(t, GetRkMetaFromCmd())
+}
+
+func TestCommandBefore(t *testing.T) {
+	ctx := cli.NewContext(nil, flag.NewFlagSet("", flag.ContinueOnError), nil)
+	ctx.Context = context.TODO()
+
+	assert.Nil(t, CommandBefore(ctx))
+	assert.NotNil(t, GetEvent(ctx))
+}
+
+func TestCommandAfter(t *testing.T) {
+	ctx := cli.NewContext(nil, flag.NewFlagSet("", flag.ContinueOnError), nil)
+	ctx.Context = context.TODO()
+
+	CommandBefore(ctx)
+	assert.Nil(t, CommandAfter(ctx))
+	assert.Equal(t, rkquery.Ended, GetEvent(ctx).GetEventStatus())
 }
 
 func assertNotPanic(t *testing.T) {

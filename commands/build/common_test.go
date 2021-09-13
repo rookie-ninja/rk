@@ -6,33 +6,12 @@
 package build
 
 import (
-	"context"
-	"flag"
-	rkquery "github.com/rookie-ninja/rk-query"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v2"
 	"io/ioutil"
 	"os"
 	"testing"
 )
-
-func TestBeforeDefault(t *testing.T) {
-	ctx := cli.NewContext(nil, flag.NewFlagSet("", flag.ContinueOnError), nil)
-	ctx.Context = context.TODO()
-
-	assert.Nil(t, beforeDefault(ctx))
-	assert.NotNil(t, common.GetEvent(ctx))
-}
-
-func TestAfterDefault(t *testing.T) {
-	ctx := cli.NewContext(nil, flag.NewFlagSet("", flag.ContinueOnError), nil)
-	ctx.Context = context.TODO()
-
-	beforeDefault(ctx)
-	assert.Nil(t, afterDefault(ctx))
-	assert.Equal(t, rkquery.Ended, common.GetEvent(ctx).GetEventStatus())
-}
 
 func TestExecCommandsBefore(t *testing.T) {
 	// Happy case

@@ -6,7 +6,6 @@
 package build
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
@@ -14,7 +13,6 @@ import (
 	"github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"go.uber.org/zap"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -28,24 +26,6 @@ var (
 		"target/bin",
 	}
 )
-
-// Create an event and inject into context
-func beforeDefault(ctx *cli.Context) error {
-	name := strings.Join(strings.Split(ctx.Command.FullName(), " "), "/")
-	event := common.CreateEvent(name)
-	event.AddPayloads(zap.Strings("flags", ctx.FlagNames()))
-
-	// Inject event into context
-	ctx.Context = context.WithValue(ctx.Context, common.EventKey, event)
-
-	return nil
-}
-
-// Extract event and finish event
-func afterDefault(ctx *cli.Context) error {
-	common.Finish(common.GetEvent(ctx), nil)
-	return nil
-}
 
 // ExecCommandsBefore Execute user provided commands before building
 func ExecCommandsBefore(ctx *cli.Context) error {

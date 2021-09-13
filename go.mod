@@ -3,12 +3,14 @@ module github.com/rookie-ninja/rk
 go 1.14
 
 require (
+	github.com/Microsoft/go-winio v0.4.17 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/fatih/color v1.12.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.2
+	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/google/go-github/v32 v32.1.0
 	github.com/markbates/pkger v0.17.1
 	github.com/pelletier/go-toml v1.8.1 // indirect
