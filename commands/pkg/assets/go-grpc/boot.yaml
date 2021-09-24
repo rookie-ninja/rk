@@ -3,6 +3,7 @@
 grpc:
   - name: greeter                   # Required, Name of grpc entry
     port: 8080                      # Required, Port of grpc entry
+    enabled: true                   # Required, Enable grpc entry
     commonService:
       enabled: true                 # Optional, Enable common service, default: false
     sw:

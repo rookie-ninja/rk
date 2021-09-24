@@ -3,6 +3,7 @@
 gin:
   - name: greeter         # Required, Name of gin entry
     port: 8080            # Required, Port of gin entry
+    enabled: true         # Required, Enable gin entry
     commonService:
       enabled: true       # Optional, Enable common service, default: false
     sw:
