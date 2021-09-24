@@ -19,6 +19,7 @@ RK command line tools. It contains a couple of useful utility functionalities in
   - [rk build](#rk-build)
   - [rk clear](#rk-clear)
   - [rk pack](#rk-pack)
+  - [rk pkg](#rk-pkg)
   - [rk docker](#rk-docker)
   - [rk run](#rk-run)
 - [build.yaml](#buildyaml)

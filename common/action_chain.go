@@ -21,6 +21,7 @@ type actionChain struct {
 	ignoreError []bool
 }
 
+// NewActionChain Create a new actionChain
 func NewActionChain() *actionChain {
 	return &actionChain{
 		chain:       make([]cli.ActionFunc, 0),
@@ -29,12 +30,14 @@ func NewActionChain() *actionChain {
 	}
 }
 
+// Add Insert an executable action into chain
 func (c *actionChain) Add(description string, action cli.ActionFunc, ignoreError bool) {
 	c.chain = append(c.chain, action)
 	c.description = append(c.description, description)
 	c.ignoreError = append(c.ignoreError, ignoreError)
 }
 
+// Execute Run all the actions in the chain
 func (c *actionChain) Execute(ctx *cli.Context) error {
 	total := len(c.chain)
 

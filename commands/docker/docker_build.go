@@ -1,31 +1,32 @@
 // Copyright (c) 2021 rookie-ninja
 //
-// Use of this source code is governed by an MIT-style
+// Use of this source code is governed by an Apache-style
 // license that can be found in the LICENSE file.
+
 package docker
 
 import (
-	"errors"
-	"github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk/commands/build"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os"
 )
 
+// Create docker build command
 func dockerBuild() *cli.Command {
 	command := &cli.Command{
 		Name:      "build",
 		Usage:     "build a docker image built with rk build command",
 		UsageText: "rk docker build",
-		Before:    beforeDefault,
-		After:     afterDefault,
+		Before:    common.CommandBefore,
+		After:     common.CommandAfter,
 		Action:    buildAction,
 	}
 
 	return command
 }
 
+// Build codes first and then build docker image based on codes
 func buildAction(ctx *cli.Context) error {
 	if err := common.UnmarshalBootConfig("build.yaml", common.BuildConfig); err != nil {
 		return err
@@ -37,13 +38,12 @@ func buildAction(ctx *cli.Context) error {
 	chain := common.NewActionChain()
 	chain.Add("Validate docker environment", validateDockerCommand, false)
 	chain.Add("Clearing target folder", func(ctx *cli.Context) error {
-		// 0: Not dir of where go.mod file exists
-		if !rkcommon.FileExists("go.mod") {
-			return errors.New("not a go directory, failed to lookup go.mod file")
-		}
 		return os.RemoveAll(common.BuildTarget)
 	}, false)
 
+	// We can call actions in build command, however, in order to print sequence of actions,
+	// we copied the same codes here.
+	// TODO: Optimize bellow code
 	switch common.BuildConfig.Build.Type {
 	case "go":
 		chain.Add("Execute user command before", build.ExecCommandsBefore, false)

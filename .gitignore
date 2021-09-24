@@ -17,3 +17,6 @@
 .idea
 .DS_Store
 ~
+
+# Coverage file
+coverage.txt
