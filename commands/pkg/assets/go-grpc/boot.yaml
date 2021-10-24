@@ -6,9 +6,14 @@ grpc:
     enabled: true                   # Required, Enable grpc entry
     commonService:
       enabled: true                 # Optional, Enable common service, default: false
+    prom:
+      enabled: true                 # Enable prometheus client
     sw:
       enabled: true                 # Optional, Enable swagger, default: false
       jsonPath: "api/gen/v1"        # Optional, The directory where swagger json file located, default: ""
     tv:
       enabled: true                 # Optional, Enable Rk TV, default: false
+    interceptors:
+      metricsProm:
+        enabled: true
 
