@@ -49,14 +49,12 @@ func runAction(ctx *cli.Context) error {
 		chain.Add("Execute user script before", build.ExecScriptBefore, false)
 		chain.Add("Build go file", build.BuildGoFile, false)
 		chain.Add("Copy to target folder", build.CopyToTarget, false)
-		chain.Add("Generate rk meta from on local", build.WriteRkMetaFile, false)
 		chain.Add("Execute user script after", build.ExecScriptAfter, false)
 		chain.Add("Execute user command after", build.ExecCommandsAfter, false)
 	default:
 		chain.Add("Execute user command before", build.ExecCommandsBefore, false)
 		chain.Add("Execute user script before", build.ExecScriptBefore, false)
 		chain.Add("Copy to target folder", build.CopyToTarget, false)
-		chain.Add("Generate rk meta from on local", build.WriteRkMetaFile, false)
 		chain.Add("Execute user script after", build.ExecScriptAfter, false)
 		chain.Add("Execute user command after", build.ExecCommandsAfter, false)
 	}

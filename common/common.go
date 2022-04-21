@@ -15,12 +15,12 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/pkg/errors"
 	"github.com/rogpeppe/go-internal/modfile"
-	"github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk-logger"
 	"github.com/rookie-ninja/rk-query"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"go/build"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -193,7 +193,7 @@ func UnmarshalBootConfig(configFilePath string, config interface{}) error {
 		configFilePath = path.Join(wd, configFilePath)
 	}
 
-	bytes := rkcommon.TryReadFile(configFilePath)
+	bytes := TryReadFile(configFilePath)
 	if len(bytes) < 1 {
 		return errors.New(fmt.Sprintf("Failed to read build.yaml file from path:%s", configFilePath))
 	}
@@ -216,8 +216,8 @@ func GetGoPathBin() string {
 // 3: Return empty if nothing matched
 func getPkgName() string {
 	// Read from go.mod
-	if rkcommon.FileExists("go.mod") {
-		if bytes := rkcommon.TryReadFile("go.mod"); len(bytes) > 0 {
+	if FileExists("go.mod") {
+		if bytes := TryReadFile("go.mod"); len(bytes) > 0 {
 			return path.Base(modfile.ModulePath(bytes))
 		}
 	}
@@ -231,11 +231,55 @@ func getPkgName() string {
 	return ""
 }
 
-// Get git information from .git folder if current package is a git package
-func getGitInfo() *rkcommon.Git {
-	res := &rkcommon.Git{
-		Commit: &rkcommon.Commit{
-			Committer: &rkcommon.Committer{},
+func CommandBefore(ctx *cli.Context) error {
+	name := strings.Join(strings.Split(ctx.Command.FullName(), " "), "/")
+	event := CreateEvent(name)
+	event.AddPayloads(zap.Strings("flags", ctx.FlagNames()))
+
+	// Inject event into context
+	ctx.Context = context.WithValue(ctx.Context, EventKey, event)
+
+	return nil
+}
+
+func CommandAfter(ctx *cli.Context) error {
+	Finish(GetEvent(ctx), nil)
+	return nil
+}
+
+func FileExists(filePath string) bool {
+	if file, err := os.Stat(filePath); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	} else if file.IsDir() {
+		return false
+	}
+	return true
+}
+
+func TryReadFile(filePath string) []byte {
+	if len(filePath) < 1 {
+		return make([]byte, 0)
+	}
+
+	if !path.IsAbs(filePath) {
+		// Ignore error
+		wd, _ := os.Getwd()
+		filePath = path.Join(wd, filePath)
+	}
+
+	if bytes, err := ioutil.ReadFile(filePath); err != nil {
+		return bytes
+	} else {
+		return bytes
+	}
+}
+
+func getGitInfo() *Git {
+	res := &Git{
+		Commit: &Commit{
+			Committer: &Committer{},
 		},
 	}
 
@@ -291,48 +335,27 @@ func getGitInfo() *rkcommon.Git {
 	return res
 }
 
-// GetRkMetaFromCmd construct RkMeta from local environment
-func GetRkMetaFromCmd() *rkcommon.RkMeta {
-	meta := &rkcommon.RkMeta{}
-
-	// Load package name from go.mod file
-	meta.Name = TargetPkgName
-
-	// Load current git info from local git
-	meta.Git = TargetGitInfo
-
-	// Load version
-	if len(meta.Git.Tag) < 1 {
-		// Tag is empty, let's try to construct version as <branch>-<commit IdAbbr>
-		if len(meta.Git.Branch) < 1 {
-			// Branch is empty, we will use commit IdAbbr instead
-			meta.Version = meta.Git.Commit.IdAbbr
-		} else {
-			// <branch>-<commit IdAbbr>
-			meta.Version = strings.Join([]string{meta.Git.Branch, meta.Git.Commit.IdAbbr}, "-")
-		}
-	} else {
-		// Use tag as version
-		meta.Version = meta.Git.Tag
+func GetPkgInfo() *PkgInfo {
+	pkgInfo := &PkgInfo{
+		Name:    "app",
+		Version: "local",
 	}
 
-	return meta
-}
+	// from git first
+	gitInfo := getGitInfo()
+	if len(gitInfo.Url) > 0 {
+		tokens := strings.Split(gitInfo.Url, "/")
+		pkgInfo.Name = tokens[len(tokens)-1]
+		pkgInfo.Version = gitInfo.Branch
 
-// Create an event and inject into context
-func CommandBefore(ctx *cli.Context) error {
-	name := strings.Join(strings.Split(ctx.Command.FullName(), " "), "/")
-	event := CreateEvent(name)
-	event.AddPayloads(zap.Strings("flags", ctx.FlagNames()))
+		return pkgInfo
+	}
 
-	// Inject event into context
-	ctx.Context = context.WithValue(ctx.Context, EventKey, event)
+	wd, err := os.Getwd()
+	if err == nil {
+		tokens := strings.Split(wd, "/")
+		pkgInfo.Name = tokens[len(tokens)-1]
+	}
 
-	return nil
-}
-
-// Extract event and finish event
-func CommandAfter(ctx *cli.Context) error {
-	Finish(GetEvent(ctx), nil)
-	return nil
+	return pkgInfo
 }

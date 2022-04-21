@@ -11,7 +11,6 @@ import (
 	"github.com/rookie-ninja/rk/commands/docker"
 	"github.com/rookie-ninja/rk/commands/install"
 	"github.com/rookie-ninja/rk/commands/pack"
-	"github.com/rookie-ninja/rk/commands/pkg"
 	"github.com/rookie-ninja/rk/commands/run"
 	"github.com/rookie-ninja/rk/commands/uninstall"
 	"github.com/rookie-ninja/rk/commands/ut"
@@ -23,7 +22,7 @@ func main() {
 	app := &cli.App{
 		Name:        "rk",
 		Usage:       "rk utility command line tools",
-		Version:     "1.0.3",
+		Version:     "1.2.4",
 		Description: "rk is command line interface for utility tools during rk style software development lifecycle",
 		Commands: []*cli.Command{
 			build.Build(),
@@ -32,7 +31,6 @@ func main() {
 			install.Install(),
 			uninstall.Uninstall(),
 			pack.Pack(),
-			pkg.Pkg(),
 			run.Run(),
 			ut.UT(),
 		},

@@ -20,7 +20,7 @@ import (
 // Build docker image by calling docker command on local machine
 // TODO: Maybe replace it with docker SDK
 func buildDockerImage(ctx *cli.Context) error {
-	meta := common.GetRkMetaFromCmd()
+	meta := common.GetPkgInfo()
 
 	if len(common.BuildConfig.Docker.Build.Registry) < 1 {
 		common.BuildConfig.Docker.Build.Registry = meta.Name

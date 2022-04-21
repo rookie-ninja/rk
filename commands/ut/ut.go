@@ -1,17 +1,11 @@
-// Copyright (c) 2021 rookie-ninja
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file.
 package ut
 
 import (
 	"fmt"
 	"github.com/fatih/color"
-	rkcommon "github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
 	"os/exec"
-	"path"
 	"strings"
 )
 
@@ -50,7 +44,7 @@ func utAction(ctx *cli.Context) error {
 	switch Lang {
 	case "go":
 		chain.Add("Running Go unit test", runGoUt, false)
-		chain.Add(fmt.Sprintf("Generating unit test coverage report at %s", path.Base(rkcommon.RkUtHtmlFilePath)), runGoUtDoc, false)
+		chain.Add(fmt.Sprintf("Generating unit test coverage report at %s", "cov.html"), runGoUtDoc, false)
 	}
 
 	return chain.Execute(ctx)
@@ -58,7 +52,7 @@ func utAction(ctx *cli.Context) error {
 
 func runGoUt(ctx *cli.Context) error {
 	args := make([]string, 0)
-	args = append(args, "test", "./...", fmt.Sprintf("-coverprofile=%s", path.Base(rkcommon.RkUtOutFilepath)))
+	args = append(args, "test", "./...", fmt.Sprintf("-coverprofile=%s", "cov.out"))
 
 	color.White("- go %s", strings.Join(args, " "))
 
@@ -75,7 +69,7 @@ func runGoUt(ctx *cli.Context) error {
 
 func runGoUtDoc(ctx *cli.Context) error {
 	args := make([]string, 0)
-	args = append(args, "tool", "cover", fmt.Sprintf("-html=%s", path.Base(rkcommon.RkUtOutFilepath)), "-o", path.Base(rkcommon.RkUtHtmlFilePath))
+	args = append(args, "tool", "cover", fmt.Sprintf("-html=%s", "cov.out"), "-o", "cov.html")
 
 	color.White("- go %s", strings.Join(args, " "))
 

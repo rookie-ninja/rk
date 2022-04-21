@@ -6,14 +6,10 @@
 package build
 
 import (
-	"errors"
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/ghodss/yaml"
-	"github.com/rookie-ninja/rk-common/common"
 	"github.com/rookie-ninja/rk/common"
 	"github.com/urfave/cli/v2"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -108,33 +104,8 @@ func execScripts(scripts []string) error {
 	return nil
 }
 
-// WriteRkMetaFile Write RK meta into .rk folder
-func WriteRkMetaFile(ctx *cli.Context) error {
-	meta := common.GetRkMetaFromCmd()
-
-	// 5: Write to .rk/git.yaml file
-	color.White("- Write files to %s", path.Join(common.BuildTarget, rkcommon.RkMetaFilePath))
-	if raw, err := yaml.Marshal(meta); err != nil {
-		color.Yellow("[Warn] %v", err)
-	} else {
-		if err := ioutil.WriteFile(path.Join(common.BuildTarget, rkcommon.RkMetaFilePath), raw, os.ModePerm); err != nil {
-			color.Yellow("[Warn] %v", err)
-		}
-	}
-
-	return nil
-}
-
 // BuildGoFile Build go file
 func BuildGoFile(ctx *cli.Context) error {
-	// Create .rk folder first
-	os.MkdirAll(path.Join(common.BuildTarget, path.Dir(rkcommon.RkMetaFilePath)), os.ModePerm)
-
-	// 0: Not dir of where go.mod file exists
-	if !rkcommon.FileExists("go.mod") {
-		return errors.New("not a go directory, failed to lookup go.mod file")
-	}
-
 	// 1: create directory named as target and sub folders
 	for i := range targetFolders {
 		if err := os.MkdirAll(targetFolders[i], os.ModePerm); err != nil {
@@ -191,12 +162,6 @@ func BuildGoFile(ctx *cli.Context) error {
 
 	// 6: copy boot.yaml file to target folder
 	copyCommand("boot.yaml", common.BuildTarget)
-
-	// 7: copy README.md, go.mod, LICENSE and unit test coverage report file .rk dir if exist
-	copyCommand("README.md", path.Join(common.BuildTarget, rkcommon.RkReadmeFilePath))
-	copyCommand("LICENSE", path.Join(common.BuildTarget, rkcommon.RkLicenseFilePath))
-	copyCommand("go.mod", path.Join(common.BuildTarget, rkcommon.RkDepFilePath))
-	copyCommand(path.Base(rkcommon.RkUtHtmlFilePath), path.Join(common.BuildTarget, rkcommon.RkUtHtmlFilePath))
 
 	return nil
 }
